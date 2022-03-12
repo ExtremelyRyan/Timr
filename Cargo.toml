@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 env = "0.0.0"
 chrono = "0.4.19"
+serde = "1.0.136"
