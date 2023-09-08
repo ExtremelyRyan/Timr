@@ -6,10 +6,16 @@ command line application to keep track of time spent working + a handy timecard 
 
 ## Another time tracker CLI?
 
-Having to submit a timecard for my daily work activites, I wanted to make a little tool that would do the annyoying
-time conversions for me (because I kept forgetting the name of the website that does it).
+Having to submit a timecard for my daily work activites, I wanted to make a little tool 
+that would do the annyoying time conversions for me 
+(because I kept forgetting the name of the website that does it).
 
-Then I thought, why not, why not write my own little task tracker while I am at it?
+Then I thought:
+
+<img src="https://i.imgflip.com/7yiby5.jpg" title="made at imgflip.com"/>
+
+so I am.
+
 
 ## License
 
