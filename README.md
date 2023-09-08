@@ -2,8 +2,7 @@
 command line application to keep track of time spent working + a handy timecard calculator
 
 
-![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache_2.0-blue.svg)
-![POSIX-only build tooling](https://img.shields.io/badge/dev_platform-POSIX-lightgrey.svg)
+![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache_2.0-blue.svg) 
 
 ## Another time tracker CLI?
 
