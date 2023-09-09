@@ -1,5 +1,7 @@
 use chrono::NaiveTime;
 use clap::{Parser, Subcommand};
+use serde::{Deserialize, Serialize};
+use serde_json;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -12,11 +14,31 @@ struct Cli {
     command: Option<Commands>,
 }
 
+#[derive(Debug, Deserialize, PartialEq, Eq, Serialize)]
 struct Task {
     date: String,
+    task_name: String,
     time_start: String,
     time_end: Option<String>,
     time_total: Option<String>,
+}
+
+impl Task {
+    fn new(
+        date: String,
+        task_name: String,
+        time_start: String,
+        time_end: Option<String>,
+        time_total: Option<String>,
+    ) -> Self {
+        Self {
+            date,
+            task_name,
+            time_start,
+            time_end,
+            time_total,
+        }
+    }
 }
 
 #[derive(Subcommand)]
@@ -92,7 +114,9 @@ fn calc_time_diff(start_time: &str, end_time: &str, cli: &Cli) -> Result<String,
     let start = NaiveTime::parse_from_str(start_time, "%H%M")?;
     let end = NaiveTime::parse_from_str(end_time, "%H%M")?;
 
-    if cli.debug { println!("start: {}\t end {}",start, end);} 
+    if cli.debug {
+        println!("start: {}\t end {}", start, end);
+    }
 
     let hours = (end - start).num_hours();
     let hours_in_min = hours * 60;
@@ -106,4 +130,8 @@ fn get_current_time() -> anyhow::Result<String> {
     let binding = chrono::Local::now().time().format("%H%M").to_string();
 
     Ok(binding)
+}
+
+fn test_serde_json() {
+    let t: Task = Task::new(date, task_name, time_start, time_end, time_total){}
 }
