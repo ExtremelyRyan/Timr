@@ -1,7 +1,11 @@
-use chrono::NaiveTime;
+use anyhow::Ok;
+use chrono::format::format;
+use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime};
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
-use serde_json;
+use serde_json::Result;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -71,6 +75,8 @@ enum Commands {
 
 fn main() {
     let cli = Cli::parse();
+    test_serde_json();
+    read_from_file("timr.json".to_string());
 
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
@@ -109,7 +115,7 @@ fn main() {
     }
 }
 
-fn calc_time_diff(start_time: &str, end_time: &str, cli: &Cli) -> Result<String, anyhow::Error> {
+fn calc_time_diff(start_time: &str, end_time: &str, cli: &Cli) -> anyhow::Result<String> {
     // let time_str = "22:10:57";
     let start = NaiveTime::parse_from_str(start_time, "%H%M")?;
     let end = NaiveTime::parse_from_str(end_time, "%H%M")?;
@@ -133,5 +139,59 @@ fn get_current_time() -> anyhow::Result<String> {
 }
 
 fn test_serde_json() {
-    let t: Task = Task::new(date, task_name, time_start, time_end, time_total){}
+    let t = generate_sample_task();
+
+    let j = serde_json::to_string(&t).unwrap();
+    let task_str = format!("{}\r\n", j);
+
+    // Open a file with append option
+    let mut data_file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("timr.json")
+        .expect("cannot open file");
+
+    // Write to a file
+    data_file
+        .write_all(task_str.as_bytes())
+        .expect("write failed");
+}
+
+fn read_from_file(filename: String) {
+    // read data from file
+    let v: Vec<String> = std::fs::read_to_string(filename) 
+        .unwrap()  // panic on possible file-reading errors
+        .lines()  // split the string into an iterator of string slices
+        .map(String::from)  // make each slice into a string
+        .collect();  // gather them together into a vector
+
+    let mut t: Vec<Task> = Vec::new();
+
+    // create struct from string
+    for lines in v {
+        let temp: Task = serde_json::from_str(&lines).unwrap();
+        t.push(temp);
+    }
+
+    dbg!(t);
+
+}
+
+fn generate_sample_task() -> Task {
+    let date = chrono::Local::now();
+    let date_s = format!("{}-{}-{}", date.year(), date.month(), date.day());
+
+    let time_start = NaiveTime::from_hms(8, 0, 0);
+    let time_end = NaiveTime::from_hms(16, 0, 0);
+    let time_total = time_end - time_start;
+
+    // dbg!(date, time_start, time_end);
+
+    Task::new(
+        date_s,
+        String::from("Sample Task"),
+        time_start.to_string(),
+        Some(time_end.to_string()),
+        Some(time_total.to_string()),
+    )
 }
