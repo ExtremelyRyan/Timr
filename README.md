@@ -1,8 +1,8 @@
 # Timr
-command line application to keep track of time spent working + a handy timecard calculator
+A handy timecard calculator plus command line application to keep track of time spent on tasks 
 
 
-![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache_2.0-blue.svg) 
+![MIT](https://img.shields.io/badge/license-MIT%2FApache_2.0-blue.svg) 
 
 ## Another time tracker CLI?
 
@@ -21,17 +21,22 @@ so I am.
 
 This repository is licensed under [MIT](http://opensource.org/licenses/MIT) 
 
-<!-- SPDX-License-Identifier: MIT -->
-
 ## Features
-TODO
+TODO!
 
 ## Usage
-TODO
+TODO!
 
 ## Dependencies
-TODO
+ lots at the moment.
 
 ## TODO
 
  - most of the app
+
+ - [x] timecard calculator
+ - [ ] read / writing tasks to a file.
+ - [ ] range based task lookup
+ - [ ] name based task lookup
+
+ - incorperating a [TUI](https://github.com/ratatui-org/ratatui/blob/main/examples/README.md#user-input) would be a very interesting premise once I get the actual thing working.

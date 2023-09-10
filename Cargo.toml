@@ -1,14 +1,15 @@
 [package]
-name = "cli-timer"
-version = "0.1.0"
+name = "timr"
+version = "0.0.1"
 edition = "2021"
+author = "Ryan Mason"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-env = "0.0.0"
 chrono = "0.4.19"
 serde = { version = "1.0.136", features = ["derive"] }
 clap = {version = "4.4.2", features = ["derive", "cargo"]}
 anyhow = "1.0.75"
 serde_json = "1.0.105"
+rand = "0.8.5"

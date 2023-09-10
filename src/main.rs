@@ -1,11 +1,12 @@
 use anyhow::Ok;
-use chrono::format::format;
-use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{Datelike, NaiveTime};
 use clap::{Parser, Subcommand};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
-use serde_json::Result;
 use std::fs::OpenOptions;
 use std::io::Write;
+
+const OUTPUT_FILE: &str = "timr.json";
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -66,17 +67,17 @@ enum Commands {
     Calc {
         /// starting time: 24hr format (i.e 1630)
         #[arg(required = true)]
-        start_time: String,
+        start: String,
         /// optional ending time: 24hr format (i.e 1800)
         #[arg(required = false)]
-        ending_time: Option<String>,
+        end: Option<String>,
     },
 }
 
-fn main() {
+fn main() -> anyhow::Result<()>{
     let cli = Cli::parse();
     test_serde_json();
-    read_from_file("timr.json".to_string());
+    _ = read_all_tasks_from_file(OUTPUT_FILE.to_string());
 
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
@@ -97,26 +98,30 @@ fn main() {
             );
         }
 
-        Some(Commands::Calc {
-            start_time,
-            ending_time,
-        }) => {
-            let result: String = match ending_time {
-                Some(end) => calc_time_diff(start_time, end, &cli).unwrap(),
+        Some(Commands::Calc { start, end }) => {
+            let result: String = match end {
+                
+                // if user has entered a ending time, we process like normal.
+                Some(end) => calc_time_diff(start, end, &cli).unwrap(),
+                
+                // otherwise we have to fill in the time.
                 None => {
-                    let time = get_current_time().unwrap();
-                    calc_time_diff(start_time, time.as_str(), &cli).unwrap()
+                    let time = get_current_time()?;
+                    calc_time_diff(start, time.as_str(), &cli).unwrap()
                 }
             };
             println!("{}", result);
         }
-
+        //? should we do something if nothing is entered?
         None => {}
     }
+    
+    Ok(())
 }
 
+/// getting our starting and ending time for a task, we calculate the difference
+/// and return a customized string.
 fn calc_time_diff(start_time: &str, end_time: &str, cli: &Cli) -> anyhow::Result<String> {
-    // let time_str = "22:10:57";
     let start = NaiveTime::parse_from_str(start_time, "%H%M")?;
     let end = NaiveTime::parse_from_str(end_time, "%H%M")?;
 
@@ -131,12 +136,16 @@ fn calc_time_diff(start_time: &str, end_time: &str, cli: &Cli) -> anyhow::Result
     Ok(format!("{} hours, {} minutes", hours.abs(), minutes.abs()))
 }
 
-fn get_current_time() -> anyhow::Result<String> {
-    // get current time
-    let binding = chrono::Local::now().time().format("%H%M").to_string();
-
-    Ok(binding)
+/// I am tired of having to remember how to get a formatted version of the current time,
+/// so now we have this function.
+/// # Return
+/// * string is formatted into the `%H%M`, seconds are not included.
+/// # Examples
+/// * "0645"
+fn get_current_time() -> anyhow::Result<String> { 
+    Ok(chrono::Local::now().time().format("%H%M").to_string())
 }
+
 
 fn test_serde_json() {
     let t = generate_sample_task();
@@ -148,7 +157,7 @@ fn test_serde_json() {
     let mut data_file = OpenOptions::new()
         .append(true)
         .create(true)
-        .open("timr.json")
+        .open(OUTPUT_FILE)
         .expect("cannot open file");
 
     // Write to a file
@@ -157,39 +166,75 @@ fn test_serde_json() {
         .expect("write failed");
 }
 
-fn read_from_file(filename: String) {
+fn read_all_tasks_from_file(filename: String) -> anyhow::Result<()> {
     // read data from file
-    let v: Vec<String> = std::fs::read_to_string(filename) 
-        .unwrap()  // panic on possible file-reading errors
-        .lines()  // split the string into an iterator of string slices
-        .map(String::from)  // make each slice into a string
-        .collect();  // gather them together into a vector
+    let collection: Vec<String> = std::fs::read_to_string(filename)
+        .unwrap() // panic on possible file-reading errors
+        .lines() // split the string into an iterator of string slices
+        .map(String::from) // make each slice into a string
+        .collect(); // gather them together into a vector
 
     let mut t: Vec<Task> = Vec::new();
 
     // create struct from string
-    for lines in v {
+    for lines in collection {
         let temp: Task = serde_json::from_str(&lines).unwrap();
         t.push(temp);
     }
 
     dbg!(t);
 
+    Ok(())
 }
 
 fn generate_sample_task() -> Task {
     let date = chrono::Local::now();
     let date_s = format!("{}-{}-{}", date.year(), date.month(), date.day());
 
-    let time_start = NaiveTime::from_hms(8, 0, 0);
-    let time_end = NaiveTime::from_hms(16, 0, 0);
-    let time_total = time_end - time_start;
+    let mut rng = rand::thread_rng();
 
-    // dbg!(date, time_start, time_end);
+    // generate starting time (between 5-am and 9am)
+    let time_start = NaiveTime::from_hms_opt(
+        rng.gen_range(5..12),
+        rng.gen_range(0..59),
+        rng.gen_range(0..59),
+    )
+    .unwrap();
+
+    // generate ending time (between 2pm and 7pm)
+    let time_end = NaiveTime::from_hms_opt(
+        rng.gen_range(13..18),
+        rng.gen_range(0..59),
+        rng.gen_range(0..59),
+    )
+    .unwrap();
+
+    // hand-roll total time difference.
+    let hours = (time_end - time_start).num_hours();
+    let hours_in_min = hours * 60;
+    let minutes = (time_end - time_start).num_minutes() - hours_in_min;
+    // todo: will likely need to come back to reformat how our time_total looks.
+    let time_total = format!("{} hours {} minutes", hours, minutes);
+
+    let tasks = [
+        "sleeping",
+        "refactoring",
+        "writing software",
+        "fixing bugs",
+        "creating new feature",
+        "debugging",
+        "stuck, pls help",
+        "getting coffee",
+    ];
+
+    let random_task: String = tasks
+        .get(rng.gen_range(0..tasks.len()))
+        .unwrap()
+        .to_string();
 
     Task::new(
         date_s,
-        String::from("Sample Task"),
+        random_task,
         time_start.to_string(),
         Some(time_end.to_string()),
         Some(time_total.to_string()),
