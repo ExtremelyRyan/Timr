@@ -1,7 +1,8 @@
+#![warn(dead_code)]
+
 use anyhow::Ok;
 use chrono::{self, NaiveTime};
 use clap::{Parser, Subcommand};
-use serde::{Deserialize, Serialize};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -12,33 +13,6 @@ pub struct Cli {
 
     #[command(subcommand)]
     command: Option<Commands>,
-}
-
-#[derive(Debug, Deserialize, PartialEq, Eq, Serialize)]
-pub struct Task {
-    pub date: String,
-    pub task_name: String,
-    pub time_start: String,
-    pub time_end: Option<String>,
-    pub time_total: Option<String>,
-}
-
-impl Task {
-    pub fn new(
-        date: String,
-        task_name: String,
-        time_start: String,
-        time_end: Option<String>,
-        time_total: Option<String>,
-    ) -> Self {
-        Self {
-            date,
-            task_name,
-            time_start,
-            time_end,
-            time_total,
-        }
-    }
 }
 
 #[derive(Subcommand)]

@@ -1,73 +1,189 @@
-use chrono::{Datelike, NaiveTime};
-use parse::Task;
-use rand::Rng;
+#![warn(dead_code)]
+use crate::task::Task;
+use anyhow::Ok;
+use chrono::format::format;
+use chrono::{NaiveDate, NaiveTime};
+use chrono::{Datelike, Duration, Utc, Weekday};
+use std::default;
+use std::fs::File;
+use std::io::{Read, Write};
+use std::path::Path;
+use std::str::FromStr;
+mod parse;
+mod task;
 
-pub mod parse;
+const OUTPUT_FILE: &str = "timr.json";
 
-pub fn generate_sample_task() -> Task {
-    let date = chrono::Local::now();
-    let date_s = format!("{}-{}-{}", date.year(), date.month(), date.day());
+/// testing our sample task generation, converting json string to task,
+pub fn test_serde_json() {
+    let t = task::generate_sample_task();
 
-    let mut rng = rand::thread_rng();
-
-    // generate starting time (between 5-am and 9am)
-    let time_start = NaiveTime::from_hms_opt(
-        rng.gen_range(5..12),
-        rng.gen_range(0..59),
-        rng.gen_range(0..59),
-    )
-    .unwrap();
-
-    // generate ending time (between 2pm and 7pm)
-    let time_end = NaiveTime::from_hms_opt(
-        rng.gen_range(13..18),
-        rng.gen_range(0..59),
-        rng.gen_range(0..59),
-    )
-    .unwrap();
-
-    // hand-roll total time difference.
-    let hours = (time_end - time_start).num_hours();
-    let hours_in_min = hours * 60;
-    let minutes = (time_end - time_start).num_minutes() - hours_in_min;
-    // todo: will likely need to come back to reformat how our time_total looks.
-    let time_total = format!("{} hours {} minutes", hours, minutes);
-
-    let tasks = [
-        "sleeping",
-        "refactoring",
-        "writing software",
-        "fixing bugs",
-        "creating new feature",
-        "debugging",
-        "stuck, pls help",
-        "getting coffee",
-    ];
-
-    let random_task: String = tasks
-        .get(rng.gen_range(0..tasks.len()))
-        .unwrap()
-        .to_string();
-
-    Task::new(
-        date_s,
-        random_task,
-        time_start.to_string(),
-        Some(time_end.to_string()),
-        Some(time_total.to_string()),
-    )
+    let json_str = serde_json::to_string(&t).unwrap();
+    let json_str = format!("{}\r\n", json_str);
+    _ = prepend_file(json_str.as_bytes(), &OUTPUT_FILE);
 }
+
+/// simple prepending file
+pub fn prepend_file<P: AsRef<Path> + ?Sized>(data: &[u8], path: &P) -> anyhow::Result<()> {
+    let mut f = File::open(path)?;
+    let mut content = data.to_owned();
+    f.read_to_end(&mut content)?;
+
+    let mut f = File::create(path)?;
+    f.write_all(content.as_slice())?;
+
+    Ok(())
+}
+
+pub fn read_all_tasks(filename: &str) -> anyhow::Result<Vec<String>> {
+    // read data from file
+    Ok(std::fs::read_to_string(filename)
+        .unwrap()
+        .lines()
+        .map(String::from)
+        .collect())
+}
+
+pub fn read_tasks_from_day_range(days: i32) -> Vec<Task> {
+    let mut rtn: Vec<Task> = Vec::new();
+    let today = Task::new_task_today();
+
+    // reading all the tasks from the file will get problematic, so this is temporary.
+    let raw = read_all_tasks(OUTPUT_FILE).unwrap();
+    raw.into_iter().for_each(|s| {
+        if !s.is_empty() {
+            let temp: Task = serde_json::from_str(&s).unwrap();
+            if compare_dates(&temp, &today) <= days {
+                rtn.push(temp);
+            }
+        }
+    });
+
+    rtn
+}
+
+pub fn read_tasks_this_week() -> Vec<Task> {
+    let monday = NaiveDate::from_isoywd_opt(
+        Utc::now().year(),
+        Utc::now().iso_week().week(),
+        chrono::Weekday::Mon,
+    )
+    .unwrap();
+
+    let mut tasks: Vec<Task> = Vec::new();
+
+    // reading all the tasks from the file will get problematic, so this is temporary.
+    let raw = read_all_tasks(OUTPUT_FILE).unwrap();
+
+    for t in raw {
+        if !t.is_empty() {
+            let task: Task = serde_json::from_str(&t).unwrap();
+            let task_date = NaiveDate::from_str(&task.date).unwrap();
+            // if task date is monday or later:
+            match (task_date - monday) >= Duration::zero() {
+                true => {
+                    // add it to this week's tasks
+                    tasks.push(task);
+                }
+                false => (),
+            }
+        }
+    }
+    dbg!(&tasks);
+    tasks
+}
+
+pub fn sum_task_total_time(t1: Task,t2: Task) -> Duration {
+    if t1.task_name != t2.task_name { return Duration::zero(); }
+
+    let mut hour = String::new();
+    let mut min= String::new();
+
+    let time_parsed: Vec<String> = t1.time_total.unwrap()
+    .split_ascii_whitespace()
+    .into_iter()
+    .filter_map(|s| s.trim().parse().ok())
+    .collect();
+    hour = match time_parsed[0].len() == 1 {
+        true  => format!("0{}:",time_parsed[0].to_string() ),
+        false => format!("{}:",time_parsed[0].to_string() ),
+    };
+    min = match time_parsed[1].len() == 1 {
+        true  => format!("0{}",time_parsed[1].to_string()), 
+        false => format!("{}",time_parsed[1].to_string()),
+    };
+    
+    let time1 = format!("{}{}", hour, min);
+    
+    // let time1 = NaiveTime::from_str(&t1.time_total.as_deref().unwrap()).unwrap();
+    // let time2 = NaiveTime::from_str(&t2.time_total.as_deref().unwrap()).unwrap();
  
+    Duration::zero()
+}
 
-// #[cfg(test)]
-// mod tests {
-//     #[test]
-//     fn exploration() {
-//         assert_eq!(2 + 2, 4);
-//     }
+pub fn test_sum_task_total_time() {
+    let task1 = Task::new(
+        "2023-9-7".to_string(),
+     "test".to_string(),
+      "0800".to_string(),
+      Some("1200".to_string()),
+      Some("4 hours 0 minutes".to_string()),
+    );
+    let task2 = Task::new(
+        "2023-9-8".to_string(),
+     "test".to_string(),
+      "0800".to_string(),
+      Some("1200".to_string()),
+      Some("4 hours 0 minutes".to_string()),
+    );
 
-//     #[test]
-//     fn another() {
-//         panic!("Make this test fail");
-//     }
-// }
+    let result = sum_task_total_time(task1, task2);
+    dbg!(result);
+}
+/**
+Compares the converted `NativeDate` date from two Tasks, and get the absolute difference of days between the two.
+
+Returns a -1 if either task is missing a `NativeDate`.
+# Example
+```no_run
+let t1: Task = Task::new("2023-9-1".to_string(), ..Default::default() );
+let t2: Task = Task::new("2023-9-7".to_string(), ..Default::default() );
+assert_eq!(compare_dates(t2, t1), 6);
+```
+*/
+pub fn compare_dates(t1: &Task, t2: &Task) -> i32 {
+    if t1.date.is_empty() || t2.date.is_empty() {
+        return -1;
+    }
+
+    let t1_date = NaiveDate::parse_from_str(&t1.date, "%Y-%m-%d").unwrap();
+    let t2_date = NaiveDate::parse_from_str(&t2.date, "%Y-%m-%d").unwrap();
+
+    i64::abs((t1_date - t2_date).num_days()) as i32
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::*;
+
+    #[test]
+    fn test_compare_dates() {
+        let t1: Task = Task::new(
+            "2023-9-1".to_string(),
+            "debugging".to_string(),
+            "11:07:32".to_string(),
+            Some("16:00:53".to_string()),
+            Some("4 hours 53 minutes".to_string()),
+        );
+        let t2: Task = Task::new(
+            "2023-9-7".to_string(),
+            "debugging".to_string(),
+            "11:07:32".to_string(),
+            Some("16:00:53".to_string()),
+            Some("4 hours 53 minutes".to_string()),
+        );
+
+        let comparison = compare_dates(&t2, &t1);
+        assert_eq!(comparison, 6);
+    }
+}
