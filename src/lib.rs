@@ -105,15 +105,15 @@ pub fn sum_task_total_time(t1: Task,t2: Task) -> Duration {
     .filter_map(|s| s.trim().parse().ok())
     .collect();
     hour = match time_parsed[0].len() == 1 {
-        true  => format!("0{}:",time_parsed[0].to_string() ),
-        false => format!("{}:",time_parsed[0].to_string() ),
+        true  => format!("0{}",time_parsed[0].to_string() ),
+        false => format!("{}",time_parsed[0].to_string() ),
     };
     min = match time_parsed[1].len() == 1 {
         true  => format!("0{}",time_parsed[1].to_string()), 
         false => format!("{}",time_parsed[1].to_string()),
     };
     
-    let time1 = format!("{}{}", hour, min);
+    let time1 = format!("{}:{}", hour, min);
     
     // let time1 = NaiveTime::from_str(&t1.time_total.as_deref().unwrap()).unwrap();
     // let time2 = NaiveTime::from_str(&t2.time_total.as_deref().unwrap()).unwrap();
