@@ -1,14 +1,14 @@
 #![warn(dead_code)]
-use crate::task::Task;
+
 use anyhow::Ok;
-use chrono::format::format;
 use chrono::{NaiveDate, NaiveTime};
-use chrono::{Datelike, Duration, Utc, Weekday};
-use std::default;
+use chrono::{Datelike, Duration, Utc};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 use std::str::FromStr;
+use crate::task::Task;
+
 mod parse;
 mod task;
 
@@ -104,21 +104,43 @@ pub fn sum_task_total_time(t1: Task,t2: Task) -> Duration {
     .into_iter()
     .filter_map(|s| s.trim().parse().ok())
     .collect();
+dbg!(&time_parsed);
     hour = match time_parsed[0].len() == 1 {
         true  => format!("0{}",time_parsed[0].to_string() ),
         false => format!("{}",time_parsed[0].to_string() ),
     };
     min = match time_parsed[1].len() == 1 {
-        true  => format!("0{}",time_parsed[1].to_string()), 
-        false => format!("{}",time_parsed[1].to_string()),
+        true  => format!("0{}",time_parsed[2].to_string()), 
+        false => format!("{}",time_parsed[2].to_string()),
     };
     
     let time1 = format!("{}:{}", hour, min);
-    
-    // let time1 = NaiveTime::from_str(&t1.time_total.as_deref().unwrap()).unwrap();
-    // let time2 = NaiveTime::from_str(&t2.time_total.as_deref().unwrap()).unwrap();
- 
-    Duration::zero()
+
+    let mut hour = String::new();
+    let mut min= String::new();
+
+    let time_parsed: Vec<String> = t2.time_total.unwrap()
+    .split_ascii_whitespace()
+    .into_iter()
+    .filter_map(|s| s.trim().parse().ok())
+    .collect();
+    hour = match time_parsed[0].len() == 1 {
+        true  => format!("{}",time_parsed[0].to_string() ),
+        false => format!("{}",time_parsed[0].to_string() ),
+    };
+    min = match time_parsed[1].len() == 1 {
+        true  => format!("{}",time_parsed[2].to_string()), 
+        false => format!("{}",time_parsed[2].to_string()),
+    };
+
+    let time2 = format!("{}:{}", hour, min);
+
+    dbg!(&time1, &time2);
+
+    let time_conv1 = chrono::NaiveTime::parse_from_str(&time1, "%H:%M").unwrap();
+    let time_conv2 = chrono::NaiveTime::parse_from_str(&time2, "%H:%M").unwrap();
+
+    (time_conv1 - time_conv2)
 }
 
 pub fn test_sum_task_total_time() {
