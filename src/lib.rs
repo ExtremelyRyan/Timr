@@ -1,13 +1,13 @@
-#![warn(dead_code)]
+#![allow(dead_code)]
 
+use crate::task::Task;
 use anyhow::Ok;
-use chrono::{NaiveDate, NaiveTime};
+use chrono::NaiveDate;
 use chrono::{Datelike, Duration, Utc};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 use std::str::FromStr;
-use crate::task::Task;
 
 mod parse;
 mod task;
@@ -15,13 +15,6 @@ mod task;
 const OUTPUT_FILE: &str = "timr.json";
 
 /// testing our sample task generation, converting json string to task,
-pub fn test_serde_json() {
-    let t = task::generate_sample_task();
-
-    let json_str = serde_json::to_string(&t).unwrap();
-    let json_str = format!("{}\r\n", json_str);
-    _ = prepend_file(json_str.as_bytes(), &OUTPUT_FILE);
-}
 
 /// simple prepending file
 pub fn prepend_file<P: AsRef<Path> + ?Sized>(data: &[u8], path: &P) -> anyhow::Result<()> {
@@ -35,21 +28,14 @@ pub fn prepend_file<P: AsRef<Path> + ?Sized>(data: &[u8], path: &P) -> anyhow::R
     Ok(())
 }
 
-pub fn read_all_tasks(filename: &str) -> anyhow::Result<Vec<String>> {
-    // read data from file
-    Ok(std::fs::read_to_string(filename)
-        .unwrap()
-        .lines()
-        .map(String::from)
-        .collect())
-}
+
 
 pub fn read_tasks_from_day_range(days: i32) -> Vec<Task> {
     let mut rtn: Vec<Task> = Vec::new();
     let today = Task::new_task_today();
 
     // reading all the tasks from the file will get problematic, so this is temporary.
-    let raw = read_all_tasks(OUTPUT_FILE).unwrap();
+    let raw = task::read_all_tasks(OUTPUT_FILE).unwrap();
     raw.into_iter().for_each(|s| {
         if !s.is_empty() {
             let temp: Task = serde_json::from_str(&s).unwrap();
@@ -73,7 +59,7 @@ pub fn read_tasks_this_week() -> Vec<Task> {
     let mut tasks: Vec<Task> = Vec::new();
 
     // reading all the tasks from the file will get problematic, so this is temporary.
-    let raw = read_all_tasks(OUTPUT_FILE).unwrap();
+    let raw = task::read_all_tasks(OUTPUT_FILE).unwrap();
 
     for t in raw {
         if !t.is_empty() {
@@ -93,75 +79,23 @@ pub fn read_tasks_this_week() -> Vec<Task> {
     tasks
 }
 
-pub fn sum_task_total_time(t1: Task,t2: Task) -> Duration {
-    if t1.task_name != t2.task_name { return Duration::zero(); }
-
-    let mut hour = String::new();
-    let mut min= String::new();
-
-    let time_parsed: Vec<String> = t1.time_total.unwrap()
-    .split_ascii_whitespace()
-    .into_iter()
-    .filter_map(|s| s.trim().parse().ok())
-    .collect();
-dbg!(&time_parsed);
-    hour = match time_parsed[0].len() == 1 {
-        true  => format!("0{}",time_parsed[0].to_string() ),
-        false => format!("{}",time_parsed[0].to_string() ),
+pub fn sum_task_total_time(t1: Task, t2: Task) -> i64 {
+    if t1.task_name != t2.task_name {
+        return -1;
+    } 
+    let task1_time_parsed: i64 = match t1.time_total {
+        Some(s) => s.parse().unwrap(),
+        None => 0,
     };
-    min = match time_parsed[1].len() == 1 {
-        true  => format!("0{}",time_parsed[2].to_string()), 
-        false => format!("{}",time_parsed[2].to_string()),
-    };
-    
-    let time1 = format!("{}:{}", hour, min);
-
-    let mut hour = String::new();
-    let mut min= String::new();
-
-    let time_parsed: Vec<String> = t2.time_total.unwrap()
-    .split_ascii_whitespace()
-    .into_iter()
-    .filter_map(|s| s.trim().parse().ok())
-    .collect();
-    hour = match time_parsed[0].len() == 1 {
-        true  => format!("{}",time_parsed[0].to_string() ),
-        false => format!("{}",time_parsed[0].to_string() ),
-    };
-    min = match time_parsed[1].len() == 1 {
-        true  => format!("{}",time_parsed[2].to_string()), 
-        false => format!("{}",time_parsed[2].to_string()),
+    let task2_time_parsed: i64 = match t2.time_total {
+        Some(s) => s.parse().unwrap(),
+        None => 0,
     };
 
-    let time2 = format!("{}:{}", hour, min);
-
-    dbg!(&time1, &time2);
-
-    let time_conv1 = chrono::NaiveTime::parse_from_str(&time1, "%H:%M").unwrap();
-    let time_conv2 = chrono::NaiveTime::parse_from_str(&time2, "%H:%M").unwrap();
-
-    (time_conv1 - time_conv2)
+    task1_time_parsed + task2_time_parsed
 }
 
-pub fn test_sum_task_total_time() {
-    let task1 = Task::new(
-        "2023-9-7".to_string(),
-     "test".to_string(),
-      "0800".to_string(),
-      Some("1200".to_string()),
-      Some("4 hours 0 minutes".to_string()),
-    );
-    let task2 = Task::new(
-        "2023-9-8".to_string(),
-     "test".to_string(),
-      "0800".to_string(),
-      Some("1200".to_string()),
-      Some("4 hours 0 minutes".to_string()),
-    );
 
-    let result = sum_task_total_time(task1, task2);
-    dbg!(result);
-}
 /**
 Compares the converted `NativeDate` date from two Tasks, and get the absolute difference of days between the two.
 
@@ -207,5 +141,35 @@ mod tests {
 
         let comparison = compare_dates(&t2, &t1);
         assert_eq!(comparison, 6);
+    }
+
+    #[test]
+    pub fn test_sum_task_total_time() {
+        let task1 = Task::new(
+            "2023-9-7".to_string(),
+            "test".to_string(),
+            "0800".to_string(),
+            Some("1200".to_string()),
+            Some("240".to_string()),
+        );
+        let task2 = Task::new(
+            "2023-9-8".to_string(),
+            "test".to_string(),
+            "0800".to_string(),
+            Some("1200".to_string()),
+            Some("240".to_string()),
+        );
+    
+        let result = sum_task_total_time(task1, task2);
+        assert_eq!(result, 480);
+    }
+
+    #[test]
+    pub fn test_serde_json() {
+        let t = task::generate_sample_task();
+    
+        let json_str = serde_json::to_string(&t).unwrap();
+        let json_str = format!("{}\r\n", json_str);
+        _ = prepend_file(json_str.as_bytes(), &OUTPUT_FILE);
     }
 }

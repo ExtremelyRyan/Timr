@@ -1,17 +1,9 @@
-#![warn(dead_code)]
-
-use chrono::{Utc, NaiveDateTime, NaiveTime};
-use timr::*;
-use     std::{time::Duration, thread::current};
-
-
-
-const OUTPUT_FILE: &str = "timr.json";
+#![warn(dead_code)] 
+mod parse;
 
 fn main() -> anyhow::Result<()> {
-    // _ = parse::do_parse();
-
-    // timr::test_serde_json();
+    _ = parse::do_parse();
+ 
 
     // _ = timr::read_all_tasks_from_file(OUTPUT_FILE);
 
@@ -20,20 +12,20 @@ fn main() -> anyhow::Result<()> {
 
     // read_tasks_this_week();
 
-    test_sum_task_total_time();
+    // test_sum_task_total_time();
 
     // so after doing all this testing, I think total_time is just going to have to be a string containing total minutes,
     // and each time we want to add to it, we will have to parse it out to a i32, manually parse the timestamp, and then add
-    // the two together, then re-save as a string. 
+    // the two together, then re-save as a string.
 
     // this is a HUGE bummer, since it seems like there is NO way we can add two DateTime, NaiveTime, etc without wonky conversions
     // to Durations (which doesnt really work well anyway).
-    let _current_total = String::from("560").parse::<i32>().unwrap();
-    let timestamp = String::from("3:15");
-    let v: Vec<&str> = timestamp.split(":").collect();
-    let aggregate: i32 = v[0].parse::<i32>().unwrap() * 60 + v[1].parse::<i32>().unwrap();
+    // let _current_total = String::from("560").parse::<i32>().unwrap();
+    // let timestamp = String::from("3:15");
+    // let v: Vec<&str> = timestamp.split(":").collect();
+    // let aggregate: i32 = v[0].parse::<i32>().unwrap() * 60 + v[1].parse::<i32>().unwrap();
 
-    dbg!(aggregate);
+    // dbg!(aggregate);
 
     Ok(())
 }

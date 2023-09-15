@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use chrono::{Datelike, NaiveDate, NaiveTime};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -73,7 +74,7 @@ pub fn generate_sample_task() -> Task {
     let hours_in_min = hours * 60;
     let minutes = (time_end - time_start).num_minutes() - hours_in_min;
     // todo: will likely need to come back to reformat how our time_total looks.
-    let time_total = format!("{} hours {} minutes", hours, minutes);
+    // let time_total = format!("{} hours {} minutes", hours, minutes);
 
     let tasks = [
         "sleeping",
@@ -96,6 +97,15 @@ pub fn generate_sample_task() -> Task {
         random_task,
         time_start.to_string(),
         Some(time_end.to_string()),
-        Some(time_total.to_string()),
+        Some((hours_in_min + minutes).to_string()),
     )
+}
+
+pub fn read_all_tasks(filename: &str) -> anyhow::Result<Vec<String>> {
+    // read data from file
+    Ok(std::fs::read_to_string(filename)
+        .unwrap()
+        .lines()
+        .map(String::from)
+        .collect())
 }
