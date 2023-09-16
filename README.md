@@ -44,13 +44,12 @@ serde_json https://github.com/serde-rs/json
 
 ## TODO
 
-BUG: tasks are not being written to file from parsing start task command. BUT, they work while using cargo test.
-
  - [x] timecard calculator
  - [x] read / writing tasks to a file.
  - [x] range based task lookup
  - [ ] name based task lookup
  - [ ] get task(s) without an end time (in progress)
  - [ ] amend task
+ - [ ] do something about starting new task with existing running task name
 
  - incorperating a [TUI](https://github.com/ratatui-org/ratatui/blob/main/examples/README.md#user-input) would be a very interesting premise once I get the actual thing working.

@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use chrono::{Datelike, NaiveDate};
 use serde::{Deserialize, Serialize};
 

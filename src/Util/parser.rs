@@ -55,7 +55,7 @@ pub fn do_parse() -> Result<()> {
                     None,
                     0,
                 );
-                output_task_to_file(t);
+                _ = output_task_to_file(t);
                 println!("{} started at: {}", task, time.clone().unwrap());
             }
             false => {
@@ -70,7 +70,7 @@ pub fn do_parse() -> Result<()> {
                     None,
                     0,
                 );
-                output_task_to_file(t);
+                _ = output_task_to_file(t);
                 println!("{} started at: {}", task, current_time);
             }
         },

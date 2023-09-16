@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use anyhow::{Ok, Result};
 use chrono::{Datelike, Duration, NaiveDate, NaiveTime, Utc};
 use rand::Rng;
@@ -9,7 +7,7 @@ use std::path::Path;
 use std::str::FromStr;
 use super::{parser::Cli, tasks::Task};
 
-const OUTPUT_FILE: &str = "timr.json";
+const OUTPUT_FILE: &str = "./timr.json";
 
 /// getting our starting and ending time for a task, we calculate the difference
 /// and return a customized string.
@@ -24,14 +22,16 @@ pub fn calc_time_diff(start_time: &str, end_time: &str, cli: &Cli) -> Result<Str
     let hours = (end - start).num_hours();
     let hours_in_min = hours * 60;
     let minutes = (end - start).num_minutes() - hours_in_min;
-
-    Ok(format!("{} hours, {} minutes", hours.abs(), minutes.abs()))
+    match hours {
+        0 => Ok(format!("{} minutes", minutes.abs())),
+        _ => Ok(format!("{} hours, {} minutes", hours.abs(), minutes.abs())),
+    } 
 }
 
-pub fn output_task_to_file(t: Task) { 
+pub fn output_task_to_file(t: Task) -> Result<()> { 
     let fstr = format!("{}\r\n", serde_json::to_string(&t).unwrap());
-    dbg!(&fstr);
     _ = prepend_file(fstr.as_bytes(), OUTPUT_FILE);
+    Ok(())
 }
 
 pub fn generate_sample_task() -> Task {
