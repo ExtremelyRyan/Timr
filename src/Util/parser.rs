@@ -1,7 +1,5 @@
-#![allow(dead_code)]
-
-use anyhow::Ok;
-use chrono::{self, NaiveTime};
+use crate::Util::{tasks::Task, utility::*};
+use anyhow::{Ok, Result};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
@@ -9,7 +7,7 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     /// Turn debugging information on
     #[arg(short, long)]
-    debug: bool,
+    pub debug: bool,
 
     #[command(subcommand)]
     command: Option<Commands>,
@@ -20,9 +18,9 @@ enum Commands {
     /// Start a task
     // #[cmd(short, long)]
     Start {
-        /// name of task  
+        /// name of task ("working on code-review #175")
         task: String,
-        /// time started
+        /// time started (HH:MM format)
         time: Option<String>,
     },
     /// End a task
@@ -43,18 +41,38 @@ enum Commands {
     },
 }
 
-pub fn do_parse() -> anyhow::Result<()> {
+pub fn do_parse() -> Result<()> {
     let cli = Cli::parse();
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     match &cli.command {
         Some(Commands::Start { task, time }) => match time.is_some() {
-            true => println!("{} started at: {}", task, time.as_deref().unwrap()),
-            false => println!(
-                "{} started at: {}",
-                task,
-                chrono::offset::Local::now().time().format("%H:%M")
-            ),
+            true => {
+                let t: Task = Task::new(
+                    get_date().unwrap(),
+                    task.to_owned(),
+                    time.clone().unwrap(),
+                    None,
+                    0,
+                );
+                output_task_to_file(t);
+                println!("{} started at: {}", task, time.clone().unwrap());
+            }
+            false => {
+                let current_time = chrono::offset::Local::now()
+                    .time()
+                    .format("%H:%M")
+                    .to_string();
+                let t: Task = Task::new(
+                    get_date().unwrap(),
+                    task.to_owned(),
+                    current_time.clone(),
+                    None,
+                    0,
+                );
+                output_task_to_file(t);
+                println!("{} started at: {}", task, current_time);
+            }
         },
         Some(Commands::End { task }) => {
             println!(
@@ -71,7 +89,7 @@ pub fn do_parse() -> anyhow::Result<()> {
 
                 // otherwise we have to fill in the time.
                 None => {
-                    let time = get_current_time()?;
+                    let time = get_time()?;
                     calc_time_diff(start, time.as_str(), &cli).unwrap()
                 }
             };
@@ -82,31 +100,4 @@ pub fn do_parse() -> anyhow::Result<()> {
     }
 
     Ok(())
-}
-
-/// getting our starting and ending time for a task, we calculate the difference
-/// and return a customized string.
-pub fn calc_time_diff(start_time: &str, end_time: &str, cli: &Cli) -> anyhow::Result<String> {
-    let start = NaiveTime::parse_from_str(start_time, "%H%M")?;
-    let end = NaiveTime::parse_from_str(end_time, "%H%M")?;
-
-    if cli.debug {
-        println!("start: {}\t end {}", start, end);
-    }
-
-    let hours = (end - start).num_hours();
-    let hours_in_min = hours * 60;
-    let minutes = (end - start).num_minutes() - hours_in_min;
-
-    Ok(format!("{} hours, {} minutes", hours.abs(), minutes.abs()))
-}
-
-/// I am tired of having to remember how to get a formatted version of the current time,
-/// so now we have this function.
-/// # Return
-/// * string is formatted into the `%H%M`, seconds are not included.
-/// # Examples
-/// * "0645"
-pub fn get_current_time() -> anyhow::Result<String> {
-    Ok(chrono::Local::now().time().format("%H%M").to_string())
 }

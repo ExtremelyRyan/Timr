@@ -2,7 +2,7 @@
 A handy timecard calculator plus command line application to keep track of time spent on tasks 
 
 
-![MIT](https://img.shields.io/badge/license-MIT%2FApache_2.0-blue.svg) 
+![MIT](https://img.shields.io/badge/license-MIT-blue.svg) 
 
 ## Another time tracker CLI?
 
@@ -28,15 +28,29 @@ TODO!
 TODO!
 
 ## Dependencies
- lots at the moment.
+anyhow https://github.com/dtolnay/anyhow
+
+chrono https://github.com/chronotope/chrono
+
+clap https://github.com/clap-rs/clap
+
+rand https://github.com/rust-random/rand
+
+serde https://github.com/serde-rs/serde
+
+serde_json https://github.com/serde-rs/json
+
+
 
 ## TODO
 
- - most of the app
+BUG: tasks are not being written to file from parsing start task command. BUT, they work while using cargo test.
 
  - [x] timecard calculator
- - [ ] read / writing tasks to a file.
- - [ ] range based task lookup
+ - [x] read / writing tasks to a file.
+ - [x] range based task lookup
  - [ ] name based task lookup
+ - [ ] get task(s) without an end time (in progress)
+ - [ ] amend task
 
  - incorperating a [TUI](https://github.com/ratatui-org/ratatui/blob/main/examples/README.md#user-input) would be a very interesting premise once I get the actual thing working.

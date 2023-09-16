@@ -1,9 +1,9 @@
-#![warn(dead_code)] 
-mod parse;
+#![allow(dead_code, non_snake_case)]
+mod Util;
+use Util::parser;
 
 fn main() -> anyhow::Result<()> {
-    _ = parse::do_parse();
- 
+    _ = parser::do_parse();
 
     // _ = timr::read_all_tasks_from_file(OUTPUT_FILE);
 
