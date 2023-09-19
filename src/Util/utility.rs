@@ -5,19 +5,17 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 use std::str::FromStr;
-use super::{parser::Cli, tasks::Task};
+use super::tasks::Task;
 
-const OUTPUT_FILE: &str = "./timr.json";
+const OUTPUT_FILE: &str = "timr.json";
 
 /// getting our starting and ending time for a task, we calculate the difference
-/// and return a customized string.
-pub fn calc_time_diff(start_time: &str, end_time: &str, cli: &Cli) -> Result<String> {
+/// and return a customized string. 
+/// # NOTE 
+/// Currently this only works for same day calculations. this does not take dates into consideration.
+pub fn calc_time_diff(start_time: &str, end_time: &str) -> Result<String> {
     let start = NaiveTime::parse_from_str(start_time, "%H%M")?;
     let end = NaiveTime::parse_from_str(end_time, "%H%M")?;
-
-    if cli.debug {
-        println!("start: {}\t end {}", start, end);
-    }
 
     let hours = (end - start).num_hours();
     let hours_in_min = hours * 60;
@@ -115,7 +113,7 @@ pub fn prepend_file<P: AsRef<Path> + ?Sized>(data: &[u8], path: &P) -> Result<()
     Ok(())
 }
 
-pub fn read_all_tasks(filename: &str) -> anyhow::Result<Vec<String>> {
+pub fn read_all_tasks(filename: &str) -> Result<Vec<String>> {
     // read data from file
     Ok(std::fs::read_to_string(filename)
         .unwrap()
@@ -204,8 +202,42 @@ pub fn compare_dates(t1: &Task, t2: &Task) -> i32 {
 
 #[cfg(test)]
 mod tests {
+    // required imports for testing
     use super::*;
-    use crate::Util::utility::compare_dates;
+    use crate::Util::utility; 
+
+    // ----------------------------
+
+    #[test]
+    pub fn test_calc_time_diff() {
+        let start = "0700";
+        let end = "1200";
+        let res = calc_time_diff(start,end).unwrap();
+        assert_eq!(res, "5 hours, 0 minutes".to_string());
+
+        let start = "0700";
+        let end = "1900";
+        let res = calc_time_diff(start,end).unwrap();
+        assert_eq!(res, "12 hours, 0 minutes".to_string());
+
+        let start = "2300";
+        let end = "0500";
+        let res = calc_time_diff(start,end).unwrap();
+        // ! this should be 6 hours, but since date is not a factor we get 18.
+        assert_eq!(res, "18 hours, 0 minutes".to_string()); 
+    }
+
+    #[test]
+    pub fn test_output_task_to_file() {
+        let t = generate_sample_task();
+        let t_json = serde_json::to_string(&t).unwrap();
+
+        _ = output_task_to_file(t);
+
+        let f = read_all_tasks("timr.json").unwrap();
+
+        assert_eq!(t_json, f[0]);
+    }
 
     #[test]
     fn test_compare_dates() {
@@ -247,6 +279,21 @@ mod tests {
 
         let result = sum_task_total_time(task1, task2);
         assert_eq!(result, 480);
+
+        let t1: Task = Task::new(
+            String::from("date"), 
+        String::from("task1"), 
+        String::from("0600"), 
+        Some(String::from("0800")), 
+        120);
+        let t2: Task = Task::new(
+            String::from("date"), 
+        String::from("task1"), 
+        String::from("0700"), 
+        Some(String::from("1000")), 
+        180);
+
+        assert_eq!(300, utility::sum_task_total_time(t1, t2));
     }
 
     #[test]
@@ -255,4 +302,6 @@ mod tests {
         let json_str = format!("{}\r\n", serde_json::to_string(&t).unwrap());
         _ = prepend_file(json_str.as_bytes(), OUTPUT_FILE);
     }
+
+
 }

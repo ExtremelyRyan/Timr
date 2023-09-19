@@ -85,12 +85,12 @@ pub fn do_parse() -> Result<()> {
         Some(Commands::Calc { start, end }) => {
             let result: String = match end {
                 // if user has entered a ending time, we process like normal.
-                Some(end) => calc_time_diff(start, end, &cli).unwrap(),
+                Some(end) => calc_time_diff(start, end).unwrap(),
 
                 // otherwise we have to fill in the time.
                 None => {
                     let time = get_time()?;
-                    calc_time_diff(start, time.as_str(), &cli).unwrap()
+                    calc_time_diff(start, time.as_str()).unwrap()
                 }
             };
             println!("{}", result);
