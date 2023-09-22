@@ -52,4 +52,8 @@ serde_json https://github.com/serde-rs/json
  - [ ] amend task
  - [ ] do something about starting new task with existing running task name
 
+ 9/22: so I got super lost in the sauce, and have gone way off track.
+ 
+* one thought, have two files: one for active tasks, other for archive. would make lookup much faster.
+
  - incorperating a [TUI](https://github.com/ratatui-org/ratatui/blob/main/examples/README.md#user-input) would be a very interesting premise once I get the actual thing working.

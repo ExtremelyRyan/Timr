@@ -43,4 +43,17 @@ impl Task {
             ..Default::default()
         }
     }
+    pub fn task_from_string(str: String) -> Self {
+        let t: Task = match serde_json::from_str(&str) {
+            Ok(task) => task,
+            Err(e) => panic!("error parsing task from json: {e}"),
+        };
+        Self {
+            date: t.date,
+            task_name: t.task_name,
+            time_start: t.time_start,
+            time_end: t.time_end,
+            time_total: t.time_total,
+        }
+    }
 }

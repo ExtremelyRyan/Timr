@@ -106,15 +106,22 @@ pub fn get_date() -> Result<String> {
     Ok(format!("{}-{}-{}", date.year(), date.month(), date.day()))
 }
 
-pub fn get_task_by_name(task_name: String, filename: &str) -> Result<Task> {
-    let t = Task::new(
-        "".to_string(),
-        "".to_string(),
-        "".to_string(),
-        Some("".to_string()),
-        0,
-    );
-    Ok(t)
+pub fn get_tasks_by_name(task_name: String, filename: &str) -> Result<Vec<Task>> {
+    let tasks = read_all_tasks(filename).unwrap();
+
+    let mut collection: Vec<Tasks> = Vec::new();
+
+    tasks.into_iter();
+
+    for str_task in tasks {
+        let t = Task::task_from_string(str_task);
+        if t.task_name == task_name {
+            collection.push(t);
+        }
+        
+    } 
+
+    Ok(collection)
 }
 
 /// simple prepending file
@@ -129,13 +136,20 @@ pub fn prepend_file<P: AsRef<Path> + ?Sized>(data: &[u8], path: &P) -> Result<()
     Ok(())
 }
 
-pub fn read_all_tasks(filename: &str) -> Result<Vec<String>> {
+pub fn read_all_tasks(filename: &str) -> Result<Vec<Task>> {
     // read data from file
-    Ok(std::fs::read_to_string(filename)
+    let collection: Vec<String> = std::fs::read_to_string(filename)
         .unwrap()
         .lines()
         .map(String::from)
-        .collect())
+        .collect();
+    
+    let mut tasks: Vec<Task> = Vec::new();
+
+    for s in collection {
+        tasks.push(Task::task_from_string(s));
+    }
+    Ok(tasks)
 }
 
 pub fn read_tasks_from_day_range(days: i32) -> Vec<Task> {
