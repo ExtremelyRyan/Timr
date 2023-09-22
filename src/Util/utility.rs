@@ -1,3 +1,4 @@
+use super::tasks::Task;
 use anyhow::{Ok, Result};
 use chrono::{Datelike, Duration, NaiveDate, NaiveTime, Utc};
 use rand::Rng;
@@ -5,13 +6,12 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 use std::str::FromStr;
-use super::tasks::Task;
 
 const OUTPUT_FILE: &str = "timr.json";
 
 /// getting our starting and ending time for a task, we calculate the difference
-/// and return a customized string. 
-/// # NOTE 
+/// and return a customized string.
+/// # NOTE
 /// Currently this only works for same day calculations. this does not take dates into consideration.
 pub fn calc_time_diff(start_time: &str, end_time: &str) -> Result<String> {
     let start = NaiveTime::parse_from_str(start_time, "%H%M")?;
@@ -23,10 +23,10 @@ pub fn calc_time_diff(start_time: &str, end_time: &str) -> Result<String> {
     match hours {
         0 => Ok(format!("{} minutes", minutes.abs())),
         _ => Ok(format!("{} hours, {} minutes", hours.abs(), minutes.abs())),
-    } 
+    }
 }
 
-pub fn output_task_to_file(t: Task) -> Result<()> { 
+pub fn output_task_to_file(t: Task) -> Result<()> {
     let fstr = format!("{}\r\n", serde_json::to_string(&t).unwrap());
     _ = prepend_file(fstr.as_bytes(), OUTPUT_FILE);
     Ok(())
@@ -96,9 +96,25 @@ pub fn get_time() -> Result<String> {
     Ok(chrono::Local::now().time().format("%H%M").to_string())
 }
 
+/// .
+///
+/// # Errors
+///
+/// This function will return an error if .
 pub fn get_date() -> Result<String> {
     let date = chrono::Local::now();
     Ok(format!("{}-{}-{}", date.year(), date.month(), date.day()))
+}
+
+pub fn get_task_by_name(task_name: String, filename: &str) -> Result<Task> {
+    let t = Task::new(
+        "".to_string(),
+        "".to_string(),
+        "".to_string(),
+        Some("".to_string()),
+        0,
+    );
+    Ok(t)
 }
 
 /// simple prepending file
@@ -204,7 +220,7 @@ pub fn compare_dates(t1: &Task, t2: &Task) -> i32 {
 mod tests {
     // required imports for testing
     use super::*;
-    use crate::Util::utility; 
+    use crate::Util::utility;
 
     // ----------------------------
 
@@ -212,19 +228,19 @@ mod tests {
     pub fn test_calc_time_diff() {
         let start = "0700";
         let end = "1200";
-        let res = calc_time_diff(start,end).unwrap();
+        let res = calc_time_diff(start, end).unwrap();
         assert_eq!(res, "5 hours, 0 minutes".to_string());
 
         let start = "0700";
         let end = "1900";
-        let res = calc_time_diff(start,end).unwrap();
+        let res = calc_time_diff(start, end).unwrap();
         assert_eq!(res, "12 hours, 0 minutes".to_string());
 
         let start = "2300";
         let end = "0500";
-        let res = calc_time_diff(start,end).unwrap();
+        let res = calc_time_diff(start, end).unwrap();
         // ! this should be 6 hours, but since date is not a factor we get 18.
-        assert_eq!(res, "18 hours, 0 minutes".to_string()); 
+        assert_eq!(res, "18 hours, 0 minutes".to_string());
     }
 
     #[test]
@@ -281,17 +297,20 @@ mod tests {
         assert_eq!(result, 480);
 
         let t1: Task = Task::new(
-            String::from("date"), 
-        String::from("task1"), 
-        String::from("0600"), 
-        Some(String::from("0800")), 
-        120);
+            String::from("date"),
+            String::from("task1"),
+            String::from("0600"),
+            Some(String::from("0800")),
+            120,
+        );
+
         let t2: Task = Task::new(
-            String::from("date"), 
-        String::from("task1"), 
-        String::from("0700"), 
-        Some(String::from("1000")), 
-        180);
+            String::from("date"),
+            String::from("task1"),
+            String::from("0700"),
+            Some(String::from("1000")),
+            180,
+        );
 
         assert_eq!(300, utility::sum_task_total_time(t1, t2));
     }
@@ -302,6 +321,4 @@ mod tests {
         let json_str = format!("{}\r\n", serde_json::to_string(&t).unwrap());
         _ = prepend_file(json_str.as_bytes(), OUTPUT_FILE);
     }
-
-
 }

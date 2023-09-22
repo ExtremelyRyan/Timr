@@ -28,6 +28,28 @@ enum Commands {
         /// name of task
         #[arg(required = true)]
         task: String,
+        /// optional end time of task (HHMM)
+        #[arg(required = false)]
+        time: String,
+    },
+
+    /// get a list of tasks
+    List {
+        /// get a list of all tasks from this week
+        #[arg(short, long)]
+        week: bool, // TODO
+
+        /// get list of today's tasks
+        #[arg(short, long)]
+        today: bool, // TODO
+
+        /// get list based on (this years) date string (MMDD)
+        #[arg(short, long, required = false)]
+        range: String, // TODO
+
+        /// get list based on number of days
+        #[arg(short, long, required = false)]
+        days: u32, // TODO
     },
 
     /// get difference between two time inputs, seperated by a space
@@ -74,12 +96,26 @@ pub fn do_parse() -> Result<()> {
                 println!("{} started at: {}", task, current_time);
             }
         },
-        Some(Commands::End { task }) => {
-            println!(
-                "{} ended at: {}",
-                task,
-                chrono::offset::Local::now().time().format("%H:%M")
-            );
+        Some(Commands::End { task, time }) => {
+            match time.is_empty() {
+                true => {
+                    println!(
+                        "{} ended at: {}",
+                        task,
+                        chrono::offset::Local::now().time().format("%H:%M")
+                    );
+                }
+                false => todo!(),
+            };
+        }
+
+        Some(Commands::List {
+            week,
+            today,
+            range,
+            days,
+        }) => {
+            dbg!(week, today, range, days);
         }
 
         Some(Commands::Calc { start, end }) => {
