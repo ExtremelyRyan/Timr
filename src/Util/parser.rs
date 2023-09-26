@@ -30,7 +30,7 @@ enum Commands {
         task: String,
         /// optional end time of task (HHMM)
         #[arg(required = false)]
-        time: String,
+        time: Option<String>,
     },
 
     /// get a list of tasks
@@ -98,14 +98,17 @@ pub fn do_parse() -> Result<()> {
         },
         Some(Commands::End { task, time }) => {
             // get last task matching that does not have a end time.
-            
-            match time.is_empty() {
+            let mut t = get_task(task, Some(OUTPUT_FILE)).unwrap();
+            match time.is_none() {
                 true => {
+                    let end = chrono::offset::Local::now().time().format("%H:%M").to_string();
                     println!(
                         "{} ended at: {}",
                         task,
-                        chrono::offset::Local::now().time().format("%H:%M")
+                        end
                     );
+                    t.time_end = Some(end);  
+                    _ = update_task_in_file(t, OUTPUT_FILE);
                 }
                 false => todo!(),
             };

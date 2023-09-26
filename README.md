@@ -47,8 +47,10 @@ serde_json https://github.com/serde-rs/json
  - [x] timecard calculator
  - [x] read / writing tasks to a file.
  - [x] range based task lookup
- - [ ] name based task lookup
- - [ ] get task(s) without an end time (in progress)
+ - [x] name based task lookup
+ - [x] update end task time in json file.
+ - [ ] calc final task time in update_task_in_file function.
+ - [ ] get task(s) without an end time (list command)
  - [ ] amend task
  - [ ] do something about starting new task with existing running task name
 

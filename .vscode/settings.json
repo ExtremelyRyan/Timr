@@ -1,15 +1,5 @@
 {
     "rust-analyzer.linkedProjects": [
-        ".\\Cargo.toml",
-        ".\\Cargo.toml",
-        ".\\Cargo.toml",
-        ".\\Cargo.toml",
-        ".\\Cargo.toml",
-        ".\\Cargo.toml",
-        ".\\Cargo.toml",
-        ".\\Cargo.toml",
-        ".\\Cargo.toml",
-        ".\\Cargo.toml"
-    ],
-    "rust-analyzer.showUnlinkedFileNotification": false
+        "/home/ryan/code/rust/Timr/Cargo.toml"
+      ],
 }

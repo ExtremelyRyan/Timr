@@ -7,7 +7,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::str::FromStr; 
 
-const OUTPUT_FILE: &str = "timr.json";
+pub const OUTPUT_FILE: &str = "timr.json";
 
 /// getting our starting and ending time for a task, we calculate the difference
 /// and return a customized string.
@@ -107,14 +107,12 @@ pub fn get_date() -> Result<String> {
 }
 
 
-pub fn get_task(task_name: &str, file: &str) -> Option<Task> {
-    let task = get_tasks_by_name(task_name.to_string(), file).unwrap();
-    for t in task {
-        if t.time_end.is_none() {
-            return Some(t);
-        }
-    }
-    None
+pub fn get_task(task_name: &str, file: Option<&str>) -> Option<Task> {
+    let task: Vec<Task> = match file.is_some() {
+        true => get_tasks_by_name(task_name.to_string(), file.unwrap()).unwrap(),
+        false => get_tasks_by_name(task_name.to_string(), OUTPUT_FILE).unwrap(),
+    };
+    task.into_iter().find(|t| t.time_end.is_none())
 }
 
 pub fn get_tasks_by_name(task_name: String, filename: &str) -> Result<Vec<Task>> {
@@ -154,7 +152,7 @@ pub fn read_all_tasks(filename: &str) -> Result<Vec<Task>> {
     let mut tasks: Vec<Task> = Vec::new();
 
     for s in collection {
-        tasks.push(Task::task_from_string(&s));
+        tasks.push(Task::task_from_string(s));
     }
     Ok(tasks)
 }
@@ -206,6 +204,39 @@ pub fn sum_task_total_time(t1: Task, t2: Task) -> i64 {
         return -1;
     }
     t1.time_total + t2.time_total
+}
+
+pub fn update_task_in_file(task: Task, file: &str) -> Result<()> {
+    let mut collection = read_all_tasks(file).unwrap(); 
+    let mut index = 0;
+
+    for (i, t) in collection.iter().enumerate() {
+        match t.task_name == task.task_name && t.time_start == task.time_start && t.date == task.date {
+            true => {
+                index = i;
+                break;
+                // t.clone_from(&&task);
+                // dbg!(&t); 
+            }
+            false => (),
+        } 
+    }  
+
+    // TODO:: need to calculate final time and append it to our task to ensure it gets saved to file.
+
+    collection.remove(index);
+    collection.insert(index, task);
+
+    let mut buf: Vec<u8> = Vec::new();
+
+    for s in collection { 
+        let mut x = s.to_json_string().as_bytes().to_owned().into_iter().collect::<Vec<u8>>();
+        buf.append(&mut x); 
+    } 
+
+    let mut f = File::create(file)?;
+    _ = f.write_all(&buf);  
+    Ok(())
 }
 
 /**
@@ -285,7 +316,7 @@ mod tests {
         );
         _ = output_task_to_file(t.clone()); 
 
-        let result = get_task("debugging", OUTPUT_FILE);
+        let result = get_task("debugging", Some(OUTPUT_FILE));
 
         assert_eq!(t, result.unwrap());
  
