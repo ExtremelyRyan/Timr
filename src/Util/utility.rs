@@ -20,6 +20,7 @@ pub fn calc_time_diff(start_time: &str, end_time: &str) -> i64 {
     let hours = (end - start).num_hours();
     let hours_in_min = hours * 60;
     (end - start).num_minutes() - hours_in_min
+    // TODO: Fix this, calc is broken. only is returning minutes.
 }
 
 pub fn output_task_to_file(t: Task) -> Result<()> {
