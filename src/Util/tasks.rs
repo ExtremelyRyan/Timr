@@ -43,8 +43,9 @@ impl Task {
             ..Default::default()
         }
     }
-    pub fn task_from_string(str: String) -> Self {
-        let t: Task = match serde_json::from_str(&str) {
+    pub fn task_from_string(s: &String) -> Self {
+        dbg!(&s);
+        let t: Task = match serde_json::from_str(&s) {
             Ok(task) => task,
             Err(e) => panic!("error parsing task from json: {e}"),
         };

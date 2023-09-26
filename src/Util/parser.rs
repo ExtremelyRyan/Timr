@@ -97,6 +97,8 @@ pub fn do_parse() -> Result<()> {
             }
         },
         Some(Commands::End { task, time }) => {
+            // get last task matching that does not have a end time.
+            
             match time.is_empty() {
                 true => {
                     println!(

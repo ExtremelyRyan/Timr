@@ -5,7 +5,7 @@ use rand::Rng;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
-use std::str::FromStr;
+use std::str::FromStr; 
 
 const OUTPUT_FILE: &str = "timr.json";
 
@@ -106,19 +106,26 @@ pub fn get_date() -> Result<String> {
     Ok(format!("{}-{}-{}", date.year(), date.month(), date.day()))
 }
 
+
+pub fn get_task(task_name: String) -> Option<Task> {
+    let task = get_tasks_by_name(task_name, OUTPUT_FILE).unwrap();
+    for t in task {
+        if t.time_end.is_none() {
+            return Some(t);
+        }
+    }
+    None
+}
+
 pub fn get_tasks_by_name(task_name: String, filename: &str) -> Result<Vec<Task>> {
+    
     let tasks = read_all_tasks(filename).unwrap();
+    let mut collection: Vec<Task> = Vec::new();
 
-    let mut collection: Vec<Tasks> = Vec::new();
-
-    tasks.into_iter();
-
-    for str_task in tasks {
-        let t = Task::task_from_string(str_task);
+    for t in tasks { 
         if t.task_name == task_name {
             collection.push(t);
         }
-        
     } 
 
     Ok(collection)
@@ -147,7 +154,7 @@ pub fn read_all_tasks(filename: &str) -> Result<Vec<Task>> {
     let mut tasks: Vec<Task> = Vec::new();
 
     for s in collection {
-        tasks.push(Task::task_from_string(s));
+        tasks.push(Task::task_from_string(&s));
     }
     Ok(tasks)
 }
@@ -158,15 +165,11 @@ pub fn read_tasks_from_day_range(days: i32) -> Vec<Task> {
 
     // reading all the tasks from the file will get problematic, so this is temporary.
     let raw = read_all_tasks(OUTPUT_FILE).unwrap();
-    raw.into_iter().for_each(|s| {
-        if !s.is_empty() {
-            let temp: Task = serde_json::from_str(&s).unwrap();
-            if compare_dates(&temp, &today) <= days {
-                rtn.push(temp);
-            }
+    for s in raw.into_iter() {
+        if compare_dates(&s, &today) <= days {
+            rtn.push(s);
         }
-    });
-
+    }
     rtn
 }
 
@@ -183,18 +186,15 @@ pub fn read_tasks_this_week() -> Vec<Task> {
     // reading all the tasks from the file will get problematic, so this is temporary.
     let raw = read_all_tasks(OUTPUT_FILE).unwrap();
 
-    for t in raw {
-        if !t.is_empty() {
-            let task: Task = serde_json::from_str(&t).unwrap();
-            let task_date = NaiveDate::from_str(&task.date).unwrap();
-            // if task date is monday or later:
-            match (task_date - monday) >= Duration::zero() {
-                true => {
-                    // add it to this week's tasks
-                    tasks.push(task);
-                }
-                false => (),
+    for t in raw {  
+        let task_date = NaiveDate::from_str(&t.date).unwrap();
+        // if task date is monday or later:
+        match (task_date - monday) >= Duration::zero() {
+            true => {
+                // add it to this week's tasks
+                tasks.push(t);
             }
+            false => (),
         }
     }
     dbg!(&tasks);
@@ -209,7 +209,8 @@ pub fn sum_task_total_time(t1: Task, t2: Task) -> i64 {
 }
 
 /**
-Compares the converted `NativeDate` date from two Tasks, and get the absolute difference of days between the two.
+Compares the converted `NativeDate` date from two Tasks, 
+and get the absolute difference of days between the two.
 
 Returns a -1 if either task is missing a `NativeDate`.
 # Example
@@ -230,8 +231,24 @@ pub fn compare_dates(t1: &Task, t2: &Task) -> i32 {
     i64::abs((t1_date - t2_date).num_days()) as i32
 }
 
+pub fn do_test() {
+    let t = generate_sample_task();
+    let t_json = serde_json::to_string(&t).unwrap();
+
+    _ = output_task_to_file(t); 
+
+    let f = read_all_tasks("timr.json").unwrap();
+
+    let task_to_json = serde_json::to_string(&f[0]).unwrap();
+
+    dbg!(&task_to_json, &t_json);
+
+    assert_eq!(t_json, task_to_json);
+}
+
 #[cfg(test)]
-mod tests {
+mod tests { 
+
     // required imports for testing
     use super::*;
     use crate::Util::utility;
@@ -262,11 +279,15 @@ mod tests {
         let t = generate_sample_task();
         let t_json = serde_json::to_string(&t).unwrap();
 
-        _ = output_task_to_file(t);
+        _ = output_task_to_file(t); 
 
         let f = read_all_tasks("timr.json").unwrap();
 
-        assert_eq!(t_json, f[0]);
+        let task_to_json = serde_json::to_string(&f[0]).unwrap();
+
+        dbg!(&task_to_json, &t_json);
+
+        assert_eq!(t_json, task_to_json);
     }
 
     #[test]
