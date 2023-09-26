@@ -1,7 +1,7 @@
 use chrono::{Datelike, NaiveDate};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, PartialEq, Eq, Serialize, Default)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Serialize, Default, Clone)]
 pub struct Task {
     pub date: String,
     pub task_name: String,
@@ -43,8 +43,7 @@ impl Task {
             ..Default::default()
         }
     }
-    pub fn task_from_string(s: &String) -> Self {
-        dbg!(&s);
+    pub fn task_from_string(s: &String) -> Self { 
         let t: Task = match serde_json::from_str(&s) {
             Ok(task) => task,
             Err(e) => panic!("error parsing task from json: {e}"),

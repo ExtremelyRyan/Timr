@@ -107,8 +107,8 @@ pub fn get_date() -> Result<String> {
 }
 
 
-pub fn get_task(task_name: String) -> Option<Task> {
-    let task = get_tasks_by_name(task_name, OUTPUT_FILE).unwrap();
+pub fn get_task(task_name: &str, file: &str) -> Option<Task> {
+    let task = get_tasks_by_name(task_name.to_string(), file).unwrap();
     for t in task {
         if t.time_end.is_none() {
             return Some(t);
@@ -272,6 +272,23 @@ mod tests {
         let res = calc_time_diff(start, end).unwrap();
         // ! this should be 6 hours, but since date is not a factor we get 18.
         assert_eq!(res, "18 hours, 0 minutes".to_string());
+    }
+
+    #[test]
+    pub fn test_get_task() {
+        let t: Task = Task::new(
+            get_date().unwrap(),
+            "debugging".to_string(),
+            "12:30:00".to_string(),
+            None,
+            293,
+        );
+        _ = output_task_to_file(t.clone()); 
+
+        let result = get_task("debugging", OUTPUT_FILE);
+
+        assert_eq!(t, result.unwrap());
+ 
     }
 
     #[test]
