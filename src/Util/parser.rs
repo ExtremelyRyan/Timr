@@ -101,13 +101,12 @@ pub fn do_parse() -> Result<()> {
             let mut t = get_task(task, Some(OUTPUT_FILE)).unwrap();
             match time.is_none() {
                 true => {
-                    let end = chrono::offset::Local::now().time().format("%H:%M").to_string();
-                    println!(
-                        "{} ended at: {}",
-                        task,
-                        end
-                    );
-                    t.time_end = Some(end);  
+                    let end = chrono::offset::Local::now()
+                        .time()
+                        .format("%H:%M")
+                        .to_string();
+                    println!("{} ended at: {}", task, end);
+                    t.time_end = Some(end);
                     _ = update_task_in_file(t, OUTPUT_FILE);
                 }
                 false => todo!(),
@@ -126,12 +125,12 @@ pub fn do_parse() -> Result<()> {
         Some(Commands::Calc { start, end }) => {
             let result: String = match end {
                 // if user has entered a ending time, we process like normal.
-                Some(end) => calc_time_diff(start, end).unwrap(),
+                Some(end) => calc_time_diff(start, end).to_string(),
 
                 // otherwise we have to fill in the time.
                 None => {
                     let time = get_time()?;
-                    calc_time_diff(start, time.as_str()).unwrap()
+                    calc_time_diff(start, time.as_str()).to_string()
                 }
             };
             println!("{}", result);
