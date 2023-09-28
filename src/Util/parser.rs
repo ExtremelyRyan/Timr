@@ -83,7 +83,7 @@ pub fn do_parse() -> Result<()> {
             false => {
                 let current_time = chrono::offset::Local::now()
                     .time()
-                    .format("%H:%M")
+                    .format("%H%M")
                     .to_string();
                 let t: Task = Task::new(
                     get_date().unwrap(),
@@ -98,19 +98,25 @@ pub fn do_parse() -> Result<()> {
         },
         Some(Commands::End { task, time }) => {
             // get last task matching that does not have a end time.
-            let mut t = get_task(task, Some(OUTPUT_FILE)).unwrap();
-            match time.is_none() {
+            let mut t: Task = get_task(task, Some(OUTPUT_FILE), false).unwrap();
+            dbg!(&task, &time);
+            match time.is_some() {
                 true => {
+                    let ending = time.clone().unwrap();
+                    t.time_end = Some(ending);
+                    println!("got here?");
+                    dbg!(&t);
+                }
+                false => {
                     let end = chrono::offset::Local::now()
                         .time()
-                        .format("%H:%M")
+                        .format("%H%M")
                         .to_string();
                     println!("{} ended at: {}", task, end);
                     t.time_end = Some(end);
-                    _ = update_task_in_file(t, OUTPUT_FILE);
                 }
-                false => todo!(),
             };
+            _ = update_task_in_file(t, OUTPUT_FILE);
         }
 
         Some(Commands::List {
@@ -125,12 +131,12 @@ pub fn do_parse() -> Result<()> {
         Some(Commands::Calc { start, end }) => {
             let result: String = match end {
                 // if user has entered a ending time, we process like normal.
-                Some(end) => calc_time_diff(start, end).to_string(),
+                Some(end) => calc_time_diff(start, end).0.to_string(),
 
                 // otherwise we have to fill in the time.
                 None => {
                     let time = get_time()?;
-                    calc_time_diff(start, time.as_str()).to_string()
+                    calc_time_diff(start, time.as_str()).0.to_string()
                 }
             };
             println!("{}", result);
