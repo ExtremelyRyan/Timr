@@ -12,10 +12,10 @@ pub const OUTPUT_FILE: &str = "timr.json";
 
 /// getting our starting and ending time for a task, we calculate the difference
 /// and return a customized string.
-/// # NOTE
+/// ### NOTE
 /// Currently this only works for same day calculations. this does not take dates into consideration.
 pub fn calc_time_diff(start_time: &str, end_time: &str) -> (String, i64) {
-    dbg!(&start_time, &end_time);
+    // dbg!(&start_time, &end_time);
     let start: NaiveTime = match NaiveTime::parse_from_str(start_time, "%H%M") {
         ParseResult::Ok(t) => t,
         Err(e) => panic!("error parsing {}.  err: {}", start_time, e),
@@ -28,7 +28,7 @@ pub fn calc_time_diff(start_time: &str, end_time: &str) -> (String, i64) {
 
     let total_hours = (end - start).num_hours().abs();
     let total_min = (end - start).num_minutes() % 60;
-    dbg!(total_hours, total_min);
+    // dbg!(total_hours, total_min);
 
     
 

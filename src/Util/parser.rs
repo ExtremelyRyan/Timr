@@ -139,7 +139,8 @@ pub fn do_parse() -> Result<()> {
                     calc_time_diff(start, time.as_str()).0.to_string()
                 }
             };
-            println!("{}", result);
+            let (hour, min) = result.split_at(2);
+            println!("{} hours and {} minutes", hour, min);
         }
         //? should we do something if nothing is entered?
         None => {}
