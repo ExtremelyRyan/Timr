@@ -36,20 +36,16 @@ enum Commands {
     /// get a list of tasks
     List {
         /// get a list of all tasks from this week
-        #[arg(short, long)]
-        week: bool, // TODO
+        #[arg(short, long, required = false)]
+        week: bool,
 
         /// get list of today's tasks
-        #[arg(short, long)]
-        today: bool, // TODO
-
-        /// get list based on (this years) date string (MMDD)
         #[arg(short, long, required = false)]
-        range: String, // TODO
+        today: bool,
 
         /// get list based on number of days
         #[arg(short, long, required = false)]
-        days: u32, // TODO
+        days: Option<i32>,
     },
 
     /// get difference between two time inputs, seperated by a space
@@ -101,26 +97,37 @@ pub fn do_parse() -> Result<()> {
             let mut t = get_task(task, Some(OUTPUT_FILE)).unwrap();
             match time.is_none() {
                 true => {
-                    let end = chrono::offset::Local::now().time().format("%H:%M").to_string();
-                    println!(
-                        "{} ended at: {}",
-                        task,
-                        end
-                    );
-                    t.time_end = Some(end);  
+                    let end = chrono::offset::Local::now()
+                        .time()
+                        .format("%H%M")
+                        .to_string();
+                    println!("{} ended at: {}", task, end);
+                    t.time_end = Some(end);
                     _ = update_task_in_file(t, OUTPUT_FILE);
                 }
                 false => todo!(),
             };
         }
 
-        Some(Commands::List {
-            week,
-            today,
-            range,
-            days,
-        }) => {
-            dbg!(week, today, range, days);
+        Some(Commands::List { week, today, days }) => {
+            match today {
+                true => {
+                    let tasks = read_tasks_from_day_range(0);
+                    for t in tasks {
+                        println!("{}", t.print());
+                    }
+                }
+                false => (),
+            }
+            match week {
+                true => {
+                    println!("{:?}", read_tasks_this_week());
+                }
+                false => (),
+            }
+            if days.is_some() {
+                println!("{:#?}", read_tasks_from_day_range(days.unwrap()));
+            }
         }
 
         Some(Commands::Calc { start, end }) => {

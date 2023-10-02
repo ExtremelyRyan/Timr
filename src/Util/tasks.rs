@@ -43,7 +43,7 @@ impl Task {
             ..Default::default()
         }
     }
-    pub fn task_from_string(s: String) -> Self { 
+    pub fn task_from_string(s: String) -> Self {
         let t: Task = match serde_json::from_str(s.as_str()) {
             Ok(task) => task,
             Err(e) => panic!("error parsing task from json: {e}"),
@@ -55,11 +55,18 @@ impl Task {
             time_end: t.time_end,
             time_total: t.time_total,
         }
-    } 
+    }
 
     pub fn to_json_string(self) -> String {
         let mut s = serde_json::to_string(&self).unwrap();
         s.insert(s.len(), '\n');
         return s;
+    }
+
+    pub fn print(self) -> String {
+        format!(
+            "{}: Started: {}, ended: {}, total time: {}",
+            self.task_name, self.time_start, self.time_end.unwrap(), self.time_total
+        )
     }
 }

@@ -5,7 +5,7 @@ use rand::Rng;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
-use std::str::FromStr; 
+use std::str::FromStr;
 
 pub const OUTPUT_FILE: &str = "timr.json";
 
@@ -106,7 +106,6 @@ pub fn get_date() -> Result<String> {
     Ok(format!("{}-{}-{}", date.year(), date.month(), date.day()))
 }
 
-
 pub fn get_task(task_name: &str, file: Option<&str>) -> Option<Task> {
     let task: Vec<Task> = match file.is_some() {
         true => get_tasks_by_name(task_name.to_string(), file.unwrap()).unwrap(),
@@ -116,15 +115,14 @@ pub fn get_task(task_name: &str, file: Option<&str>) -> Option<Task> {
 }
 
 pub fn get_tasks_by_name(task_name: String, filename: &str) -> Result<Vec<Task>> {
-    
     let tasks = read_all_tasks(filename).unwrap();
     let mut collection: Vec<Task> = Vec::new();
 
-    for t in tasks { 
+    for t in tasks {
         if t.task_name == task_name {
             collection.push(t);
         }
-    } 
+    }
 
     Ok(collection)
 }
@@ -148,7 +146,7 @@ pub fn read_all_tasks(filename: &str) -> Result<Vec<Task>> {
         .lines()
         .map(String::from)
         .collect();
-    
+
     let mut tasks: Vec<Task> = Vec::new();
 
     for s in collection {
@@ -184,7 +182,7 @@ pub fn read_tasks_this_week() -> Vec<Task> {
     // reading all the tasks from the file will get problematic, so this is temporary.
     let raw = read_all_tasks(OUTPUT_FILE).unwrap();
 
-    for t in raw {  
+    for t in raw {
         let task_date = NaiveDate::from_str(&t.date).unwrap();
         // if task date is monday or later:
         match (task_date - monday) >= Duration::zero() {
@@ -195,7 +193,7 @@ pub fn read_tasks_this_week() -> Vec<Task> {
             false => (),
         }
     }
-    dbg!(&tasks);
+    // dbg!(&tasks);
     tasks
 }
 
@@ -207,20 +205,23 @@ pub fn sum_task_total_time(t1: Task, t2: Task) -> i64 {
 }
 
 pub fn update_task_in_file(task: Task, file: &str) -> Result<()> {
-    let mut collection = read_all_tasks(file).unwrap(); 
+    let mut collection = read_all_tasks(file).unwrap();
     let mut index = 0;
 
     for (i, t) in collection.iter().enumerate() {
-        match t.task_name == task.task_name && t.time_start == task.time_start && t.date == task.date {
+        match t.task_name == task.task_name
+            && t.time_start == task.time_start
+            && t.date == task.date
+        {
             true => {
                 index = i;
                 break;
                 // t.clone_from(&&task);
-                // dbg!(&t); 
+                // dbg!(&t);
             }
             false => (),
-        } 
-    }  
+        }
+    }
 
     // TODO:: need to calculate final time and append it to our task to ensure it gets saved to file.
 
@@ -229,18 +230,23 @@ pub fn update_task_in_file(task: Task, file: &str) -> Result<()> {
 
     let mut buf: Vec<u8> = Vec::new();
 
-    for s in collection { 
-        let mut x = s.to_json_string().as_bytes().to_owned().into_iter().collect::<Vec<u8>>();
-        buf.append(&mut x); 
-    } 
+    for s in collection {
+        let mut x = s
+            .to_json_string()
+            .as_bytes()
+            .to_owned()
+            .into_iter()
+            .collect::<Vec<u8>>();
+        buf.append(&mut x);
+    }
 
     let mut f = File::create(file)?;
-    _ = f.write_all(&buf);  
+    _ = f.write_all(&buf);
     Ok(())
 }
 
 /**
-Compares the converted `NativeDate` date from two Tasks, 
+Compares the converted `NativeDate` date from two Tasks,
 and get the absolute difference of days between the two.
 
 Returns a -1 if either task is missing a `NativeDate`.
@@ -266,7 +272,7 @@ pub fn do_test() {
     let t = generate_sample_task();
     let t_json = serde_json::to_string(&t).unwrap();
 
-    _ = output_task_to_file(t); 
+    _ = output_task_to_file(t);
 
     let f = read_all_tasks("timr.json").unwrap();
 
@@ -278,7 +284,7 @@ pub fn do_test() {
 }
 
 #[cfg(test)]
-mod tests { 
+mod tests {
 
     // required imports for testing
     use super::*;
@@ -314,12 +320,11 @@ mod tests {
             None,
             293,
         );
-        _ = output_task_to_file(t.clone()); 
+        _ = output_task_to_file(t.clone());
 
         let result = get_task("debugging", Some(OUTPUT_FILE));
 
         assert_eq!(t, result.unwrap());
- 
     }
 
     #[test]
@@ -327,7 +332,7 @@ mod tests {
         let t = generate_sample_task();
         let t_json = serde_json::to_string(&t).unwrap();
 
-        _ = output_task_to_file(t); 
+        _ = output_task_to_file(t);
 
         let f = read_all_tasks("timr.json").unwrap();
 
