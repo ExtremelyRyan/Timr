@@ -4,6 +4,5 @@ mod Util;
 
 fn main() -> anyhow::Result<()> {
     _ = Util::parser::do_parse();
-
     Ok(())
 }
