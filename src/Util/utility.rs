@@ -314,7 +314,6 @@ mod tests {
     // required imports for testing
     use super::*;
     use crate::Util::utility;
-    use std::{thread, time};
     // ----------------------------
 
     #[test]
