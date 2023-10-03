@@ -95,13 +95,13 @@ pub fn do_parse() -> Result<()> {
         Some(Commands::End { task, time }) => {
             // get last task matching that does not have a end time.
             let mut t: Task = get_task(task, Some(OUTPUT_FILE), false).unwrap();
-            dbg!(&task, &time);
+            // dbg!(&task, &time);
             match time.is_some() {
                 true => {
                     let ending = time.clone().unwrap();
                     t.time_end = Some(ending);
-                    println!("got here?");
-                    dbg!(&t);
+                    // println!("got here?");
+                    // dbg!(&t);
                 }
                 false => {
                     let end = chrono::offset::Local::now()
@@ -127,12 +127,18 @@ pub fn do_parse() -> Result<()> {
             }
             match week {
                 true => {
-                    println!("{:?}", read_tasks_this_week());
+                    let tasks = read_tasks_this_week();
+                    for t in tasks {
+                        println!("{}", t.print());
+                    } 
                 }
                 false => (),
             }
             if days.is_some() {
-                println!("{:#?}", read_tasks_from_day_range(days.unwrap()));
+                let tasks = read_tasks_from_day_range(days.unwrap());
+                    for t in tasks {
+                        println!("{}", t.print());
+                    }  
             }
         }
 

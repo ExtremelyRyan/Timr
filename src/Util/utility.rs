@@ -1,6 +1,6 @@
 use super::tasks::Task;
 use anyhow::{Ok, Result};
-use chrono::ParseResult;
+use chrono::{ParseResult, Timelike};
 use chrono::{Datelike, Duration, NaiveDate, NaiveTime, Utc};
 use rand::Rng;
 use std::fs::File;
@@ -65,6 +65,14 @@ pub fn generate_sample_task() -> Task {
     )
     .unwrap();
 
+    let start_format: String;
+    if time_start.minute() < 10 {
+        start_format = format!("{}0{}", time_start.hour(),time_start.minute());
+    } else {
+        start_format = format!("{}{}", time_start.hour(),time_start.minute());
+    }
+    
+
     // generate ending time (between 2pm and 7pm)
     let time_end = NaiveTime::from_hms_opt(
         rng.gen_range(13..18),
@@ -72,6 +80,14 @@ pub fn generate_sample_task() -> Task {
         rng.gen_range(0..59),
     )
     .unwrap();
+    
+    let end_format: String;
+    if time_end.minute() < 10 {
+        end_format = format!("{}0{}", time_end.hour(),time_end.minute());
+    } else {
+        end_format = format!("{}{}", time_end.hour(),time_end.minute());
+    }
+
 
     // hand-roll total time difference.
     let hours = (time_end - time_start).num_hours();
@@ -99,8 +115,8 @@ pub fn generate_sample_task() -> Task {
     Task::new(
         date_s,
         random_task,
-        time_start.to_string(),
-        Some(time_end.to_string()),
+        start_format,
+        Some(end_format),
         hours_in_min + minutes,
     )
 }
@@ -268,6 +284,7 @@ pub fn update_task_in_file(mut task: Task, file: &str) -> Result<()> {
     collection.remove(index);
     collection.insert(index, task);
 
+    // buf will store our collection, after being converted to bytes. 
     let mut buf: Vec<u8> = Vec::new();
 
     for s in collection {
@@ -281,8 +298,9 @@ pub fn update_task_in_file(mut task: Task, file: &str) -> Result<()> {
     }
 
     let mut f = File::create(file)?;
-    _ = f.write_all(&buf);
-    Ok(())
+    Ok(f.write_all(&buf)?)
+
+    // Ok(())
 }
 
 /**

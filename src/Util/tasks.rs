@@ -64,9 +64,17 @@ impl Task {
     }
 
     pub fn print(self) -> String {
-        format!(
-            "{}: Started: {}, ended: {}, total time: {}",
-            self.task_name, self.time_start, self.time_end.unwrap(), self.time_total
-        )
+        if self.time_end.is_some() {
+            return format!(
+                "{}: Started: {}, ended: {}, total time: {}",
+                self.task_name, self.time_start, self.time_end.unwrap(), self.time_total
+            );
+        } else {
+            format!(
+                "{}: Started: {}, ended: {}, total time: {}",
+                self.task_name, self.time_start, "", self.time_total
+            )
+        }
+        
     }
 }
