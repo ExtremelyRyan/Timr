@@ -1,7 +1,6 @@
 use super::tasks::Task;
 use anyhow::{Ok, Result};
-use chrono::{ParseResult, Timelike};
-use chrono::{Datelike, Duration, NaiveDate, NaiveTime, Utc};
+use chrono::{ParseResult, Timelike, Datelike, Duration, NaiveDate, NaiveTime, Utc};
 use rand::Rng;
 use std::fs::File;
 use std::io::{Read, Write};
