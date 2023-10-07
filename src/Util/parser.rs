@@ -1,4 +1,4 @@
-use crate::Util::{tasks::Task, utility::*};
+use crate::util::{tasks::Task, utility::*};
 use anyhow::{Ok, Result};
 use clap::{Parser, Subcommand};
 
@@ -33,7 +33,7 @@ enum Commands {
         time: Option<String>,
     },
 
-    /// get a list of tasks
+    /// get a list of tasks. List with no arguments returns a list of unended tasks
     List {
         /// get a list of all tasks from this week
         #[arg(short, long, required = false)]
@@ -46,6 +46,25 @@ enum Commands {
         /// get list based on number of days
         #[arg(short, long, required = false)]
         days: Option<i32>,
+    },
+
+    Fix {
+        /// name of task
+        #[arg(required = true)]
+        task: String,
+
+        /// days to search for task
+        #[arg(required = false)]
+        days: i64,
+
+        /// amend start time (HH:MM format)
+        #[arg(short, long, required = false)]
+        start: Option<String>,
+
+        /// amend end time (HH:MM format)
+        #[arg(short, long, required = false)]
+        end: Option<String>,
+
     },
 
     /// get difference between two time inputs, seperated by a space
@@ -64,34 +83,52 @@ pub fn do_parse() -> Result<()> {
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     match &cli.command {
-        Some(Commands::Start { task, time }) => match time.is_some() {
-            true => {
-                let t: Task = Task::new(
-                    get_date().unwrap(),
-                    task.to_owned(),
-                    time.clone().unwrap(),
-                    None,
-                    0,
-                );
-                _ = output_task_to_file(t);
-                println!("{} started at: {}", task, time.clone().unwrap());
+        Some(Commands::Start { task, time }) => {
+            if check_if_task_exists(task.clone()) {
+                println!("\nthere is already a incomplete task with that name. \ndo you wish to create a new task? Y/N");
+                let mut resp = String::new();
+                std::io::stdin().read_line(&mut resp).unwrap();
+                match resp.as_str().trim() {
+                    "y" | "yes" => (),
+                    "n" | "no" => {
+                        println!("task canceled.");
+                        std::process::exit(0);
+                    }
+                    _ => {
+                        println!("invalid input, cancelling new task.");
+                        std::process::exit(0);
+                    }
+                }
             }
-            false => {
-                let current_time = chrono::offset::Local::now()
-                    .time()
-                    .format("%H%M")
-                    .to_string();
-                let t: Task = Task::new(
-                    get_date().unwrap(),
-                    task.to_owned(),
-                    current_time.clone(),
-                    None,
-                    0,
-                );
-                _ = output_task_to_file(t);
-                println!("{} started at: {}", task, current_time);
+            match time.is_some() {
+                true => {
+                    let t: Task = Task::new(
+                        get_date().unwrap(),
+                        task.to_owned(),
+                        time.clone().unwrap(),
+                        None,
+                        0,
+                    );
+                    _ = output_task_to_file(t);
+                    println!("{} started at: {}", task, time.clone().unwrap());
+                }
+                false => {
+                    let current_time = chrono::offset::Local::now()
+                        .time()
+                        .format("%H%M")
+                        .to_string();
+                    let t: Task = Task::new(
+                        get_date().unwrap(),
+                        task.to_owned(),
+                        current_time.clone(),
+                        None,
+                        0,
+                    );
+                    _ = output_task_to_file(t);
+                    println!("{} started at: {}", task, current_time);
+                }
             }
-        },
+        }
         Some(Commands::End { task, time }) => {
             // get last task matching that does not have a end time.
             let mut t: Task = get_task(task, Some(OUTPUT_FILE), false).unwrap();
@@ -100,8 +137,6 @@ pub fn do_parse() -> Result<()> {
                 true => {
                     let ending = time.clone().unwrap();
                     t.time_end = Some(ending);
-                    // println!("got here?");
-                    // dbg!(&t);
                 }
                 false => {
                     let end = chrono::offset::Local::now()
@@ -115,30 +150,55 @@ pub fn do_parse() -> Result<()> {
             _ = update_task_in_file(t, OUTPUT_FILE);
         }
 
+        Some(Commands::Fix {task, days, start, end}) => { 
+            if *days >= 1 {
+                let tasks: Vec<Task> = read_tasks_from_day_range(*days as i32);
+                if tasks.len() > 1 {
+                    println!("please choose which task named {task} to modify:");
+                }
+                let count = 1;
+                for t in tasks {
+                    println!("{}. {} \t {} \t {}", count, t.task_name, t.date, t.time_start);
+                }
+                // get index from user
+                let mut resp = String::new();
+                std::io::stdin().read_line(&mut resp).unwrap();
+
+                let index = resp.trim().parse::<i32>().unwrap();
+                
+            }
+            
+            
+
+        },
+
         Some(Commands::List { week, today, days }) => {
-            match today {
-                true => {
-                    let tasks = read_tasks_from_day_range(0);
-                    for t in tasks {
-                        println!("{}", t.print());
-                    }
+            if today.clone() {
+                let tasks = read_tasks_from_day_range(0);
+                for t in tasks {
+                    println!("{}", t.print().unwrap());
                 }
-                false => (),
             }
-            match week {
-                true => {
-                    let tasks = read_tasks_this_week();
-                    for t in tasks {
-                        println!("{}", t.print());
-                    } 
+
+            if week.clone() {
+                let tasks = read_tasks_this_week();
+                for t in tasks {
+                    println!("{}", t.print().unwrap());
                 }
-                false => (),
             }
+
             if days.is_some() {
                 let tasks = read_tasks_from_day_range(days.unwrap());
-                    for t in tasks {
-                        println!("{}", t.print());
-                    }  
+                for t in tasks {
+                    println!("{}", t.print().unwrap());
+                }
+            }
+
+            if !today && !week && days.is_none() {
+                let tasks = read_incomplete_tasks();
+                for t in tasks {
+                    println!("{}", t.print().unwrap());
+                }
             }
         }
 

@@ -36,7 +36,7 @@ impl Task {
             ..Default::default()
         }
     }
-    pub fn new_task_from_date(date: NaiveDate) -> Self {
+    pub fn _new_task_from_date(date: NaiveDate) -> Self {
         // create a temp task for a specified date.
         Self {
             date: date.to_string(),
@@ -63,18 +63,16 @@ impl Task {
         return s;
     }
 
-    pub fn print(self) -> String {
-        if self.time_end.is_some() {
-            return format!(
-                "{}: Started: {}, ended: {}, total time: {}",
-                self.task_name, self.time_start, self.time_end.unwrap(), self.time_total
-            );
-        } else {
-            format!(
-                "{}: Started: {}, ended: {}, total time: {}",
-                self.task_name, self.time_start, "", self.time_total
-            )
+    pub fn print(self) -> Option<String> {
+        match self.time_end.is_some() {
+            true => Some(format!(
+                "{}: Started: {}, ended: {}, Duration: {}",
+                self.task_name,
+                self.time_start,
+                self.time_end.unwrap(),
+                self.time_total
+            )),
+            false => Some(format!("{}: Started: {}", self.task_name, self.time_start)),
         }
-        
     }
 }

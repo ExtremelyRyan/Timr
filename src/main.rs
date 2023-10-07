@@ -1,7 +1,5 @@
-#![allow(dead_code, non_snake_case)]
-
-mod Util;
+mod util;
 
 fn main() -> anyhow::Result<()> {
-    Util::parser::do_parse()
+    util::parser::do_parse()
 }

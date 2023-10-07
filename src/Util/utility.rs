@@ -1,6 +1,6 @@
 use super::tasks::Task;
 use anyhow::{Ok, Result};
-use chrono::{ParseResult, Timelike, Datelike, Duration, NaiveDate, NaiveTime, Utc};
+use chrono::{Datelike, Duration, NaiveDate, NaiveTime, ParseResult, Timelike, Utc};
 use rand::Rng;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -29,8 +29,6 @@ pub fn calc_time_diff(start_time: &str, end_time: &str) -> (String, i64) {
     let total_min = (end - start).num_minutes() % 60;
     // dbg!(total_hours, total_min);
 
-    
-
     let s: String = match total_hours < 10 {
         true => match total_min < 10 {
             true => format!("0{}0{}", total_hours, total_min),
@@ -43,6 +41,16 @@ pub fn calc_time_diff(start_time: &str, end_time: &str) -> (String, i64) {
     };
 
     (s, (end - start).num_minutes())
+}
+
+pub fn check_if_task_exists(task: String) -> bool {
+    let tasks: Vec<Task> = read_incomplete_tasks();
+    for t in tasks {
+        if t.task_name == task && t.time_end == None {
+            return true;
+        }
+    }
+    false
 }
 
 pub fn output_task_to_file(t: Task) -> Result<()> {
@@ -66,11 +74,10 @@ pub fn generate_sample_task() -> Task {
 
     let start_format: String;
     if time_start.minute() < 10 {
-        start_format = format!("{}0{}", time_start.hour(),time_start.minute());
+        start_format = format!("{}0{}", time_start.hour(), time_start.minute());
     } else {
-        start_format = format!("{}{}", time_start.hour(),time_start.minute());
+        start_format = format!("{}{}", time_start.hour(), time_start.minute());
     }
-    
 
     // generate ending time (between 2pm and 7pm)
     let time_end = NaiveTime::from_hms_opt(
@@ -79,14 +86,13 @@ pub fn generate_sample_task() -> Task {
         rng.gen_range(0..59),
     )
     .unwrap();
-    
+
     let end_format: String;
     if time_end.minute() < 10 {
-        end_format = format!("{}0{}", time_end.hour(),time_end.minute());
+        end_format = format!("{}0{}", time_end.hour(), time_end.minute());
     } else {
-        end_format = format!("{}{}", time_end.hour(),time_end.minute());
+        end_format = format!("{}{}", time_end.hour(), time_end.minute());
     }
-
 
     // hand-roll total time difference.
     let hours = (time_end - time_start).num_hours();
@@ -130,11 +136,6 @@ pub fn get_time() -> Result<String> {
     Ok(chrono::Local::now().time().format("%H%M").to_string())
 }
 
-/// .
-///
-/// # Errors
-///
-/// This function will return an error if .
 pub fn get_date() -> Result<String> {
     let date = chrono::Local::now();
     Ok(format!("{}-{}-{}", date.year(), date.month(), date.day()))
@@ -199,6 +200,19 @@ pub fn read_all_tasks(filename: &str) -> Result<Vec<Task>> {
     Ok(tasks)
 }
 
+pub fn read_incomplete_tasks() -> Vec<Task> {
+    let mut rtn: Vec<Task> = Vec::new();
+
+    // reading all the tasks from the file will get problematic, so this is temporary.
+    let raw: Vec<Task> = read_all_tasks(OUTPUT_FILE).unwrap();
+    for s in raw.into_iter() {
+        if s.time_end == None {
+            rtn.push(s);
+        }
+    }
+    rtn
+}
+
 pub fn read_tasks_from_day_range(days: i32) -> Vec<Task> {
     let mut rtn: Vec<Task> = Vec::new();
     let today = Task::new_task_today();
@@ -248,6 +262,15 @@ pub fn sum_task_total_time(t1: Task, t2: Task) -> i64 {
     t1.time_total + t2.time_total
 }
 
+/// Updates task in place in json file by comparing task name, date, and start time.
+///
+/// # Panics
+///
+/// Panics if .
+///
+/// # Errors
+///
+/// This function will return an error if .
 pub fn update_task_in_file(mut task: Task, file: &str) -> Result<()> {
     let mut collection = read_all_tasks(file).unwrap();
     let mut index = 0;
@@ -260,8 +283,6 @@ pub fn update_task_in_file(mut task: Task, file: &str) -> Result<()> {
             true => {
                 index = i;
                 break;
-                // t.clone_from(&&task);
-                // dbg!(&t);
             }
             false => (),
         }
@@ -272,18 +293,19 @@ pub fn update_task_in_file(mut task: Task, file: &str) -> Result<()> {
             let current_time = get_time().unwrap();
             task.time_total = calc_time_diff(&collection[index].time_start, &current_time).1;
         }
-        false => { 
+        false => {
             task.time_total = calc_time_diff(
                 &collection[index].time_start,
                 task.time_end.clone().unwrap().as_str(),
-            ).1;
+            )
+            .1;
         }
     }
 
     collection.remove(index);
     collection.insert(index, task);
 
-    // buf will store our collection, after being converted to bytes. 
+    // buf will store our collection, after being converted to bytes.
     let mut buf: Vec<u8> = Vec::new();
 
     for s in collection {
@@ -298,22 +320,18 @@ pub fn update_task_in_file(mut task: Task, file: &str) -> Result<()> {
 
     let mut f = File::create(file)?;
     Ok(f.write_all(&buf)?)
-
-    // Ok(())
 }
 
-/**
-Compares the converted `NativeDate` date from two Tasks,
-and get the absolute difference of days between the two.
-
-Returns a -1 if either task is missing a `NativeDate`.
-# Example
-```no_run
-let t1: Task = Task::new("2023-9-1".to_string(), ..Default::default() );
-let t2: Task = Task::new("2023-9-7".to_string(), ..Default::default() );
-assert_eq!(compare_dates(t2, t1), 6);
-```
-*/
+/// Compares the converted `NativeDate` date from two Tasks,
+/// and get the absolute difference of days between the two.
+///
+/// Returns a -1 if either task is missing a `NativeDate`.
+/// # Example
+/// ```no_run
+/// let t1: Task = Task::new("2023-9-1".to_string(), ..Default::default() );
+/// let t2: Task = Task::new("2023-9-7".to_string(), ..Default::default() );
+/// assert_eq!(compare_dates(t2, t1), 6);
+/// ```
 pub fn compare_dates(t1: &Task, t2: &Task) -> i32 {
     if t1.date.is_empty() || t2.date.is_empty() {
         return -1;
@@ -324,13 +342,13 @@ pub fn compare_dates(t1: &Task, t2: &Task) -> i32 {
 
     i64::abs((t1_date - t2_date).num_days()) as i32
 }
- 
+
 #[cfg(test)]
 mod tests {
 
     // required imports for testing
     use super::*;
-    use crate::Util::utility;
+    use crate::util::utility;
     // ----------------------------
 
     #[test]
@@ -357,9 +375,9 @@ mod tests {
         let t: Task = Task::new(
             get_date().unwrap(),
             "debugging".to_string(),
-            "12:30:00".to_string(),
-            None,
-            293,
+            "1230".to_string(),
+            Some("1330".to_string()),
+            60,
         );
         _ = output_task_to_file(t.clone());
     }
@@ -376,7 +394,7 @@ mod tests {
     //     _ = output_task_to_file(t.clone());
 
     //     // little delay
-    //     let delay = time::Duration::from_millis(2000); 
+    //     let delay = time::Duration::from_millis(2000);
     //     thread::sleep(delay);
 
     //     let result = get_task("debugging", Some(OUTPUT_FILE), true).unwrap();
@@ -389,10 +407,10 @@ mod tests {
     //     let t = generate_sample_task();
     //     let t_json = serde_json::to_string(&t).unwrap();
 
-    //     _ = output_task_to_file(t); 
+    //     _ = output_task_to_file(t);
 
     //     // little delay
-    //     let delay = time::Duration::from_millis(2000); 
+    //     let delay = time::Duration::from_millis(2000);
     //     thread::sleep(delay);
 
     //     let f = read_all_tasks("timr.json").unwrap();

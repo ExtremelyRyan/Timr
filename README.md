@@ -49,10 +49,10 @@ serde_json https://github.com/serde-rs/json
  - [x] range based task lookup
  - [x] name based task lookup
  - [x] update end task time in json file.
- - [ ] calc final task time in update_task_in_file function.
- - [ ] get task(s) without an end time (list command)
+ - [x] calc final task time in update_task_in_file function.
+ - [x] get task(s) without an end time (list command)
  - [ ] amend task
- - [ ] do something about starting new task with existing running task name
+ - [x] do something about starting new task with existing running task name
 
  9/22: so I got super lost in the sauce, and have gone way off track.
  
