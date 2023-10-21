@@ -1,3 +1,8 @@
+{"date":"2023-10-21","task_name":"tester","time_start":"1100","time_end":"1200","time_total":60}
+{"date":"2023-10-21","task_name":"example","time_start":"1101","time_end":"1131","time_total":30}
+{"date":"2023-10-21","task_name":"example","time_start":"1100","time_end":"1130","time_total":30}
+{"date":"2023-10-21","task_name":"writing software","time_start":"914","time_end":"1505","time_total":350}
+{"date":"2023-10-21","task_name":"debugging","time_start":"1230","time_end":"1330","time_total":60}
 {"date":"2023-10-6","task_name":"duplicate_task","time_start":"1900","time_end":null,"time_total":0}
 {"date":"2023-10-6","task_name":"duplicate_task","time_start":"1901","time_end":null,"time_total":0}
 {"date":"2023-10-6","task_name":"duplicate_task","time_start":"1932","time_end":null,"time_total":0}

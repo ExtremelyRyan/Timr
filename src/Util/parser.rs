@@ -64,7 +64,6 @@ enum Commands {
         /// amend end time (HH:MM format)
         #[arg(short, long, required = false)]
         end: Option<String>,
-
     },
 
     /// get difference between two time inputs, seperated by a space
@@ -78,7 +77,7 @@ enum Commands {
     },
 }
 
-pub fn do_parse() -> Result<()> {
+pub fn do_parse() -> anyhow::Result<()> {
     let cli = Cli::parse();
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
@@ -102,13 +101,8 @@ pub fn do_parse() -> Result<()> {
             }
             match time.is_some() {
                 true => {
-                    let t: Task = Task::new(
-                        get_date().unwrap(),
-                        task.to_owned(),
-                        time.clone().unwrap(),
-                        None,
-                        0,
-                    );
+                    let t: Task =
+                        Task::new(get_date()?, task.to_owned(), time.clone().unwrap(), None, 0);
                     _ = output_task_to_file(t);
                     println!("{} started at: {}", task, time.clone().unwrap());
                 }
@@ -143,14 +137,19 @@ pub fn do_parse() -> Result<()> {
                         .time()
                         .format("%H%M")
                         .to_string();
-                    println!("{} ended at: {}", task, end);
                     t.time_end = Some(end);
                 }
             };
+            println!("{} ended at: {}", task, t.clone().time_end.unwrap());
             _ = update_task_in_file(t, OUTPUT_FILE);
         }
 
-        Some(Commands::Fix {task, days, start, end}) => { 
+        Some(Commands::Fix {
+            task,
+            days,
+            start,
+            end,
+        }) => {
             if *days >= 1 {
                 let tasks: Vec<Task> = read_tasks_from_day_range(*days as i32);
                 if tasks.len() > 1 {
@@ -158,19 +157,18 @@ pub fn do_parse() -> Result<()> {
                 }
                 let count = 1;
                 for t in tasks {
-                    println!("{}. {} \t {} \t {}", count, t.task_name, t.date, t.time_start);
+                    println!(
+                        "{}. {} \t {} \t {}",
+                        count, t.task_name, t.date, t.time_start
+                    );
                 }
                 // get index from user
                 let mut resp = String::new();
                 std::io::stdin().read_line(&mut resp).unwrap();
 
                 let index = resp.trim().parse::<i32>().unwrap();
-                
             }
-            
-            
-
-        },
+        }
 
         Some(Commands::List { week, today, days }) => {
             if today.clone() {
