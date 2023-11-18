@@ -1,8 +1,5 @@
-# Timr
+# Timr (WORK IN PROGESS)
 A handy timecard calculator plus command line application to keep track of time spent on tasks 
-
-
-![MIT](https://img.shields.io/badge/license-MIT-blue.svg) 
 
 ## Another time tracker CLI?
 
@@ -16,46 +13,29 @@ Then I thought:
 
 so I am.
 
+## Authors
+me!
+you can tell me on twitter if you love it (or not) [@Extremely_Ryan](https://twitter.com/Extremely_Ryan)
+
+### Executing program 
+TODO!
+* How to run the program
+* Step-by-step bullets
+```
+code blocks for commands
+```
+
+## Dependencies
+[anyhow](https://github.com/dtolnay/anyhow), [chrono](https://github.com/chronotope/chrono), [clap](https://github.com/clap-rs/clap), 
+[rand](https://github.com/rust-random/rand), [serde](https://github.com/serde-rs/serde), [serde_json](https://github.com/serde-rs/json)
 
 ## License
 
-This repository is licensed under [MIT](http://opensource.org/licenses/MIT) 
+This repo is licensed under [MIT](http://opensource.org/licenses/MIT) see LICENSE for details
 
-## Features
-TODO!
+## Acknowledgments
+non-exhaustive list of inspiration
 
-## Usage
-TODO!
+[bartib](https://github.com/nikolassv/bartib)
 
-## Dependencies
-anyhow https://github.com/dtolnay/anyhow
-
-chrono https://github.com/chronotope/chrono
-
-clap https://github.com/clap-rs/clap
-
-rand https://github.com/rust-random/rand
-
-serde https://github.com/serde-rs/serde
-
-serde_json https://github.com/serde-rs/json
-
-
-
-## TODO
-
- - [x] timecard calculator
- - [x] read / writing tasks to a file.
- - [x] range based task lookup
- - [x] name based task lookup
- - [x] update end task time in json file.
- - [x] calc final task time in update_task_in_file function.
- - [x] get task(s) without an end time (list command)
- - [ ] amend task
- - [x] do something about starting new task with existing running task name
-
- 9/22: so I got super lost in the sauce, and have gone way off track.
- 
-* one thought, have two files: one for active tasks, other for archive. would make lookup much faster.
-
- - incorperating a [TUI](https://github.com/ratatui-org/ratatui/blob/main/examples/README.md#user-input) would be a very interesting premise once I get the actual thing working.
+[timewarrior](https://github.com/GothenburgBitFactory/timewarrior)
