@@ -1,5 +1,5 @@
 use crate::util::{tasks::Task, utility::*};
-use anyhow::{Ok, Result};
+use anyhow::Ok;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
@@ -15,15 +15,16 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Start a task
+    /// Start a task. 
+    /// if no time is given, start time wil be current time.
     // #[cmd(short, long)]
     Start {
-        /// name of task ("working on code-review #175")
+        /// name of task "working on code-review #175" or kickoff-meeting
         task: String,
         /// time started (HH:MM format)
         time: Option<String>,
     },
-    /// End a task
+    /// End a task. if no time is given, end time will be current time.
     End {
         /// name of task
         #[arg(required = true)]
@@ -55,7 +56,7 @@ enum Commands {
 
         /// days to search for task
         #[arg(required = false)]
-        days: i64,
+        days: Option<i64>,
 
         /// amend start time (HH:MM format)
         #[arg(short, long, required = false)]
@@ -102,7 +103,7 @@ pub fn do_parse() -> anyhow::Result<()> {
             match time.is_some() {
                 true => {
                     let t: Task =
-                        Task::new(get_date()?, task.to_owned(), time.clone().unwrap(), None, 0);
+                        Task::new(get_date().expect("failed to get date!"), task.to_owned(), time.clone().unwrap(), None, 0);
                     _ = output_task_to_file(t);
                     println!("{} started at: {}", task, time.clone().unwrap());
                 }
@@ -147,13 +148,18 @@ pub fn do_parse() -> anyhow::Result<()> {
         Some(Commands::Fix {
             task,
             days,
-            start,
-            end,
+            start: _,
+            end: _,
         }) => {
-            if *days >= 1 {
-                let tasks: Vec<Task> = read_tasks_from_day_range(*days as i32);
+            let tasks: Vec<Task>;
+            if days.is_some() && days.unwrap() >= 1 {
+                tasks = read_tasks_from_day_range(days.unwrap() as i32);
+            } else {
+                tasks = read_tasks_from_day_range(7 as i32);
+            }
+
                 if tasks.len() > 1 {
-                    println!("please choose which task named {task} to modify:");
+                    println!("please choose which task named {} to modify:",task);
                 }
                 let count = 1;
                 for t in tasks {
@@ -166,8 +172,7 @@ pub fn do_parse() -> anyhow::Result<()> {
                 let mut resp = String::new();
                 std::io::stdin().read_line(&mut resp).unwrap();
 
-                let index = resp.trim().parse::<i32>().unwrap();
-            }
+                let index = resp.trim().parse::<i32>().unwrap(); 
         }
 
         Some(Commands::List { week, today, days }) => {

@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use super::tasks::Task;
 use anyhow::{Ok, Result};
 use chrono::{Datelike, Duration, NaiveDate, NaiveTime, ParseResult, Timelike, Utc};

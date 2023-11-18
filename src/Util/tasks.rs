@@ -64,15 +64,17 @@ impl Task {
     }
 
     pub fn print(self) -> Option<String> {
-        match self.time_end.is_some() {
-            true => Some(format!(
+        match self.time_end {
+            Some(end) => {
+                Some(format!(
                 "{}: Started: {}, ended: {}, Duration: {}",
                 self.task_name,
                 self.time_start,
-                self.time_end.unwrap(),
+                end,
                 self.time_total
-            )),
-            false => Some(format!("{}: Started: {}", self.task_name, self.time_start)),
+            ))
+            }
+            _ => Some(format!("{}: Started: {}", self.task_name, self.time_start)),
         }
     }
 }
